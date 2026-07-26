@@ -1,0 +1,13 @@
+Always consult AGENTS.md.
+
+When implementing:
+
+- keep modules independent
+- update documentation
+- add tests
+
+Never:
+
+- bypass adapters
+- put UI logic in the core
+- regenerate large files unnecessarily
