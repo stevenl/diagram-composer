@@ -1,0 +1,565 @@
+# Diagram Composer Adapter Framework Specification
+
+## 1. Purpose
+
+This document defines the adapter framework used by the Diagram Composer.
+
+The adapter framework allows the editor to support multiple text-based diagram languages while maintaining a single, language-independent editing experience.
+
+The initial implementation targets **PlantUML C4**. The framework is designed so that future adapters (such as Mermaid) can be added without requiring changes to the editor core.
+
+---
+
+# 2. Design Goals
+
+The adapter framework shall:
+
+* Isolate language-specific behaviour.
+* Provide a consistent API for the editor.
+* Allow third-party language implementations.
+* Preserve source text wherever practical.
+* Be independently testable.
+* Require no changes to the editor when adding new languages.
+
+---
+
+# 3. Responsibilities
+
+The editor is responsible for:
+
+* Visual editing.
+* Property editing.
+* Selection.
+* Commands.
+* Undo/redo.
+* User interaction.
+
+The adapter is responsible for:
+
+* Parsing source text.
+* Generating source text.
+* Validation.
+* Formatting.
+* Language capabilities.
+* Mapping between the language and the core diagram model.
+
+---
+
+# 4. Overall Architecture
+
+```text
+               Diagram Editor
+
+                      │
+
+              Core Diagram Model
+
+                      │
+
+             Diagram Adapter API
+
+      ┌───────────────┼────────────────┐
+
+      ▼               ▼                ▼
+
+ PlantUML C4       Mermaid       Future Adapter
+```
+
+The editor communicates only with the Adapter API.
+
+The editor never contains language-specific logic.
+
+---
+
+# 5. Adapter Lifecycle
+
+Each adapter follows the same lifecycle.
+
+```text
+Source File
+
+     │
+
+Parse()
+
+     │
+
+Diagram Model
+
+     │
+
+User Edits
+
+     │
+
+Generate()
+
+     │
+
+Updated Source File
+```
+
+---
+
+# 6. Adapter Registration
+
+Each adapter registers itself with the framework.
+
+Example metadata:
+
+| Property             | Example              |
+| -------------------- | -------------------- |
+| Identifier           | `plantuml-c4`        |
+| Display Name         | PlantUML C4          |
+| Version              | 1.0                  |
+| Supported File Types | `.puml`, `.plantuml` |
+
+The framework discovers adapters using IntelliJ extension points.
+
+---
+
+# 7. Adapter Capabilities
+
+Not every language supports the same concepts.
+
+Each adapter advertises its capabilities.
+
+Example:
+
+```text
+Supports Boundaries
+
+Yes
+
+Supports Components
+
+Yes
+
+Supports Automatic Layout
+
+No
+
+Supports Multiple Relationship Types
+
+Yes
+
+Supports Notes
+
+Future
+```
+
+The UI enables or disables features accordingly.
+
+---
+
+# 8. Adapter API
+
+The adapter API is the primary contract between the editor and a language implementation.
+
+Conceptually:
+
+```kotlin
+interface DiagramAdapter {
+
+    fun parse(source: String): Diagram
+
+    fun generate(diagram: Diagram): String
+
+    fun validate(source: String): ValidationResult
+
+    fun supports(file: VirtualFile): Boolean
+
+    fun capabilities(): AdapterCapabilities
+
+    fun entityTypes(): List<EntityType>
+
+    fun relationshipTypes(): List<RelationshipType>
+
+    fun propertyDefinitions(entityType: EntityType): List<PropertyDefinition>
+
+}
+```
+
+The exact interface may evolve, but backwards compatibility should be maintained where possible.
+
+---
+
+# 9. Parsing Requirements
+
+The parser shall:
+
+* Parse valid diagrams.
+* Parse partially complete diagrams.
+* Recover from errors where practical.
+* Report validation issues.
+* Preserve unsupported constructs.
+
+The parser must never silently discard information.
+
+---
+
+# 10. Generation Requirements
+
+Generation should produce:
+
+* Valid source.
+* Consistent formatting.
+* Stable output.
+* Readable files.
+
+Repeated parsing and generation should not continually reformat the document.
+
+Round-trip stability is a key requirement.
+
+---
+
+# 11. Validation
+
+Validation is language-specific.
+
+Validation should identify:
+
+* Invalid identifiers.
+* Missing references.
+* Duplicate identifiers.
+* Invalid relationships.
+* Unsupported constructs.
+* Parser errors.
+
+Validation should distinguish between:
+
+* Errors
+* Warnings
+* Informational messages
+
+---
+
+# 12. Formatting
+
+Each adapter owns formatting.
+
+Formatting includes:
+
+* Indentation.
+* Blank lines.
+* Ordering.
+* Relationship formatting.
+* Property formatting.
+
+The editor does not format source directly.
+
+---
+
+# 13. Incremental Updates
+
+Adapters should support incremental updates where practical.
+
+Example:
+
+Changing:
+
+```plantuml
+Container(api,"API")
+```
+
+to
+
+```plantuml
+Container(api,"Payment API")
+```
+
+should modify only the relevant source rather than regenerating the entire document.
+
+If incremental updates are not possible, full regeneration may be used as a fallback.
+
+---
+
+# 14. Core Model Mapping
+
+Adapters map language constructs into the core model.
+
+Example:
+
+```text
+PlantUML
+
+Container()
+
+  ↓
+
+Entity
+
+  ↓
+
+Visual Editor
+```
+
+Likewise:
+
+```text
+Visual Edit
+
+  ↓
+
+Entity
+
+  ↓
+
+PlantUML Container()
+```
+
+This mapping should be deterministic.
+
+---
+
+# 15. PlantUML C4 Adapter
+
+## Purpose
+
+The first implementation of the adapter framework.
+
+Supports:
+
+* C4 System Context
+* C4 Container
+* C4 Component diagrams
+
+---
+
+## Supported Entities
+
+| C4 Element  | Core Entity |
+| ----------- | ----------- |
+| Person      | Person      |
+| Person_Ext  | Person      |
+| System      | System      |
+| System_Ext  | System      |
+| Container   | Container   |
+| ContainerDb | Database    |
+| Component   | Component   |
+
+---
+
+## Supported Boundaries
+
+Initial support:
+
+* Enterprise_Boundary
+* System_Boundary
+* Container_Boundary
+
+---
+
+## Supported Relationships
+
+Initial support:
+
+* Rel
+* Rel_U
+* Rel_D
+* Rel_L
+* Rel_R
+* BiRel
+
+Relationship metadata should include:
+
+* Description
+* Technology
+* Direction
+* Tags (future)
+
+---
+
+## Supported Properties
+
+Entity properties include:
+
+* Identifier
+* Name
+* Description
+* Technology
+* Tags
+* External/Internal
+
+Relationship properties include:
+
+* Description
+* Technology
+* Direction
+* Tags
+
+---
+
+## Unsupported Features (MVP)
+
+Initially excluded:
+
+* Sprites
+* Themes
+* Layout macros
+* Custom macros
+* Dynamic diagrams
+* Deployment diagrams
+
+Unsupported constructs should be preserved when possible rather than removed.
+
+---
+
+# 16. Mermaid Adapter (Future)
+
+The Mermaid adapter will implement the same API.
+
+Supported concepts may include:
+
+Entities:
+
+* Process
+* Decision
+* Database
+* Terminal
+* Circle
+
+Relationships:
+
+* Arrow
+* Dotted Arrow
+* Thick Arrow
+* Labelled Arrow
+
+The editor should not require changes when the Mermaid adapter is introduced.
+
+---
+
+# 17. Future Language Support
+
+Potential adapters include:
+
+* Structurizr DSL
+* D2
+* Graphviz DOT
+* PlantUML Sequence
+* PlantUML Class
+* Mermaid Sequence
+* Mermaid Architecture
+
+The framework should remain flexible enough to support languages that are not strictly graph-based.
+
+---
+
+# 18. Extension Guidelines
+
+Third-party adapters should:
+
+* Depend only on the Adapter API.
+* Not depend on editor internals.
+* Supply their own parser.
+* Supply their own generator.
+* Supply capability metadata.
+* Provide automated tests.
+
+---
+
+# 19. Compatibility
+
+Adapters should declare:
+
+* Supported plugin version.
+* Supported language version.
+* Minimum IntelliJ version.
+
+The framework should allow multiple adapters to coexist.
+
+---
+
+# 20. Testing Requirements
+
+Each adapter must provide tests for:
+
+## Parsing
+
+Input source → Diagram Model
+
+## Generation
+
+Diagram Model → Source
+
+## Round-trip
+
+Source
+
+  ↓
+
+Diagram Model
+
+  ↓
+
+Source
+
+  ↓
+
+Diagram Model
+
+The second model should be semantically equivalent to the first.
+
+## Validation
+
+Invalid source should produce expected diagnostics.
+
+## Performance
+
+Adapters should be tested using:
+
+* Small diagrams (<50 entities)
+* Medium diagrams (50–200 entities)
+* Large diagrams (200+ entities)
+
+---
+
+# 21. Design Principles
+
+Every adapter should follow these principles.
+
+### Preserve User Intent
+
+Never rewrite source unnecessarily.
+
+### Be Tolerant
+
+Recover gracefully from incomplete or partially invalid files.
+
+### Be Predictable
+
+The same input should always produce the same model.
+
+### Be Extensible
+
+New language features should be additive rather than requiring breaking changes.
+
+### Keep the Editor Language-Agnostic
+
+The editor should never contain code that recognises PlantUML, Mermaid, or any other diagram language directly.
+
+---
+
+# 22. Future Enhancements
+
+Potential enhancements to the adapter framework include:
+
+* Automatic capability discovery.
+* Version-aware parsing.
+* User-selectable formatting styles.
+* Custom property editors.
+* Adapter-specific quick actions.
+* Import/export between diagram languages.
+* Cross-language migration (for example, PlantUML C4 → Mermaid Architecture).
+* Language-specific refactoring support.
+
+---
+
+# 23. Summary
+
+The adapter framework is the abstraction layer that separates the editor from any individual diagram language.
+
+By placing all parsing, generation, validation, formatting and language capabilities behind a stable Adapter API, the editor can provide a consistent user experience while remaining open to future languages and community-contributed extensions.
+
+The PlantUML C4 adapter serves as the reference implementation of this architecture and establishes the conventions that future adapters should follow.
