@@ -526,6 +526,8 @@ undo()
 
 # 8. IntelliJ Integration
 
+Each supported extension is registered as a PSI-backed `LanguageFileType`, not handled through generic file matching. See `docs/engineering.md` Section 2.5 for the concrete extension points (PSI, `FileEditorProvider`, threading, undo) this relies on.
+
 ## 8.1 Supported Files
 
 Initial support:

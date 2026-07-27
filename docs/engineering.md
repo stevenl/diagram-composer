@@ -79,6 +79,32 @@ Compose should be embedded where custom UI is required.
 
 ---
 
+## 2.5 IntelliJ Platform Integration Points
+
+The plugin integrates through the platform's standard extension points rather than reading and writing files by hand. This section exists so Sections 6 (Synchronisation) and 7 (Undo/Redo) can actually be implemented, not as new product requirements.
+
+### Language and file type
+
+Each supported extension (`.puml`, `.plantuml`) is registered as a `com.intellij.lang.Language` with a corresponding `LanguageFileType`. This is what makes the platform treat diagram files as first-class source files (syntax highlighting hooks, PSI, VFS change tracking) instead of generic text.
+
+### PSI
+
+Source text is parsed into a `PsiFile` through the language's parser definition. Adapters (Section 12) should read from and write through PSI — not raw strings read off disk — so the plugin gets IntelliJ's existing incremental reparsing, change events, and editor integration for free instead of re-implementing them.
+
+### FileEditor
+
+The split source/visual layout described in `docs/ui.md` Section 3.1 is implemented as a `FileEditorProvider` supplying a custom `FileEditor` (conceptually similar to the platform's `TextEditorWithPreview`), not a standalone window or dialog.
+
+### Threading
+
+All PSI and VFS reads must happen inside a `ReadAction`; all writes inside a `WriteAction` (typically via `WriteCommandAction`) on the EDT. Compose recomposition happens outside those actions. The Diagram Model is the boundary that marshals data between the two sides — adapters and Compose code must never touch PSI directly from a background thread.
+
+### Undo integration
+
+`WriteCommandAction` boundaries are what IntelliJ's undo stack actually records. The `Command`/`execute()`/`undo()` abstraction in Section 7 should be a thin wrapper around a single `WriteCommandAction`, not a parallel undo mechanism competing with the platform's.
+
+---
+
 # 3. Module Architecture
 
 Recommended project layout:
