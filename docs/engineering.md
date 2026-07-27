@@ -324,25 +324,26 @@ interface DiagramAdapter {
 
 # 13. Parsing Strategy
 
-The parser should support:
+The parser must support:
 
-* Incremental parsing.
 * Error recovery.
 * Source preservation.
 
-Avoid:
+Incremental parsing is a Phase 2 goal (`docs/adapters.md` Section 13), not an MVP requirement.
+
+For the MVP, this is sufficient:
 
 ```
 Source
 
-   ↓
+    ↓
 
-Complete regeneration
+Full parse → Model
 ```
 
-for every change.
+and generation may fully regenerate the source file on every change (`docs/adapters.md` Section 10).
 
-Prefer:
+Once that round-trip is reliable and covered by tests, targeted/incremental updates can be introduced as an optimisation:
 
 ```
 Source
@@ -355,6 +356,8 @@ AST + Model
 
 Small targeted update
 ```
+
+Do not build the incremental path before the simple, full-regeneration path is correct — building it speculatively ahead of evidence that regeneration is too slow would violate the project's simplicity-first principle.
 
 ---
 
