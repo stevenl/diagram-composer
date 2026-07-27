@@ -87,29 +87,29 @@ Rewrite diagram editor architecture
 
 # 3. Repository Structure
 
-Recommended structure:
+The module layout (`core/`, `ui/`, `adapter-api/`, `adapter-plantuml-c4/`, `adapter-mermaid/`, `intellij-plugin/`) is defined authoritatively in `docs/architecture.md` Section 3. Repository-level directories alongside those modules:
 
 ```
 diagram-composer/
 
 ├── core/
-│
-├── model/
-│
+
+├── ui/
+
 ├── adapter-api/
-│
-├── adapter-plantuml/
-│
-├── ui-compose/
-│
+
+├── adapter-plantuml-c4/
+
+├── adapter-mermaid/
+
 ├── intellij-plugin/
-│
-├── tests/
-│
+
 ├── docs/
-│
+
 └── examples/
 ```
+
+There is no separate top-level `tests/` or `model/` directory — see `docs/engineering.md` Section 3.
 
 ---
 

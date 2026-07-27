@@ -145,7 +145,7 @@ PlantUML / Mermaid / Other
 The project should be divided into independent modules.
 
 ```
-architecture-diagram-plugin/
+diagram-composer/
 
     core/
 
@@ -159,6 +159,8 @@ architecture-diagram-plugin/
 
     intellij-plugin/
 ```
+
+This is the authoritative module layout — other documents reference it rather than redefining it.
 
 ---
 
@@ -376,7 +378,7 @@ name
 
 type
 
-children
+children (ids of the entities or nested boundaries it contains)
 ```
 
 ---

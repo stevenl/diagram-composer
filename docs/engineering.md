@@ -107,25 +107,25 @@ All PSI and VFS reads must happen inside a `ReadAction`; all writes inside a `Wr
 
 # 3. Module Architecture
 
-Recommended project layout:
+The authoritative module layout is defined in `docs/architecture.md` Section 3. This document does not redefine it; refer there.
 
 ```
 diagram-composer/
 
 ├── core/
-│
-├── model/
-│
+
+├── ui/
+
 ├── adapter-api/
-│
-├── adapter-plantuml/
-│
-├── ui-compose/
-│
-├── intellij-plugin/
-│
-└── tests/
+
+├── adapter-plantuml-c4/
+
+├── adapter-mermaid/
+
+└── intellij-plugin/
 ```
+
+The domain model (Section 5 below) lives inside `core/` — there is no separate `model/` module. Tests live alongside the code they test (`src/test`, `src/commonTest`, `src/jvmTest`, per each module's own source sets), not in a standalone top-level `tests/` directory.
 
 ---
 
@@ -151,13 +151,13 @@ It must not depend on:
 
 # 5. Diagram Model
 
-The model represents a semantic diagram.
+The canonical domain model is defined in `docs/architecture.md` Section 4 (Entity, Relationship, Boundary). This section is not a competing definition — it is that same model expressed as Kotlin data classes for implementation reference. If this ever drifts from architecture.md, architecture.md wins.
 
 Example:
 
 ```kotlin
 data class Diagram(
-    val elements: List<Element>,
+    val entities: List<Entity>,
     val relationships: List<Relationship>,
     val boundaries: List<Boundary>
 )
@@ -165,14 +165,17 @@ data class Diagram(
 
 ---
 
-## Element
+## Entity
 
 ```kotlin
-data class Element(
+data class Entity(
     val id: String,
     val name: String,
-    val type: ElementType,
-    val properties: Map<String,String>
+    val type: EntityType,
+    val description: String? = null,
+    val technology: String? = null,
+    val tags: List<String> = emptyList(),
+    val properties: Map<String, String> = emptyMap()
 )
 ```
 
@@ -182,9 +185,26 @@ data class Element(
 
 ```kotlin
 data class Relationship(
+    val id: String,
     val sourceId: String,
     val targetId: String,
-    val description: String?
+    val description: String? = null,
+    val technology: String? = null,
+    val type: RelationshipType = RelationshipType.DEFAULT,
+    val properties: Map<String, String> = emptyMap()
+)
+```
+
+---
+
+## Boundary
+
+```kotlin
+data class Boundary(
+    val id: String,
+    val name: String,
+    val type: BoundaryType,
+    val children: List<String> = emptyList() // ids of contained entities or nested boundaries
 )
 ```
 
@@ -305,7 +325,7 @@ Example:
 
 ```kotlin
 data class VisualElement(
-    val elementId: String,
+    val entityId: String,
     val position: Offset,
     val size: Size
 )
