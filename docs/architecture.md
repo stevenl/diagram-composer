@@ -144,20 +144,24 @@ PlantUML / Mermaid / Other
 
 The project should be divided into independent modules.
 
+All code modules live under a top-level `modules/` directory, so they are visually distinguishable from `docs/`, build files, and other repository-level directories. Gradle module coordinates match the folder path exactly (e.g. `:modules:core`) — there is no shortening indirection.
+
 ```
 diagram-composer/
 
-    core/
+    modules/
 
-    ui/
+        core/
 
-    adapter-api/
+        ui/
 
-    adapter-plantuml-c4/
+        adapter-api/
 
-    adapter-mermaid/
+        adapter-plantuml-c4/
 
-    intellij-plugin/
+        adapter-mermaid/
+
+        intellij-plugin/
 ```
 
 This is the authoritative module layout — other documents reference it rather than redefining it.

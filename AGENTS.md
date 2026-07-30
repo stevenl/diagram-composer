@@ -120,7 +120,6 @@ Avoid duplicated logic.
 Maintain separation between:
 
 - core
-- model
 - adapters
 - UI
 - IntelliJ integration

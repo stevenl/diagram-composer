@@ -87,22 +87,24 @@ Rewrite diagram editor architecture
 
 # 3. Repository Structure
 
-The module layout (`core/`, `ui/`, `adapter-api/`, `adapter-plantuml-c4/`, `adapter-mermaid/`, `intellij-plugin/`) is defined authoritatively in `docs/architecture.md` Section 3. Repository-level directories alongside those modules:
+The module layout (`core/`, `ui/`, `adapter-api/`, `adapter-plantuml-c4/`, `adapter-mermaid/`, `intellij-plugin/`) is defined authoritatively in `docs/architecture.md` Section 3. All of these modules live under a top-level `modules/` directory, so they are visually distinguishable from `docs/` and other repository-level directories. Gradle module coordinates match the folder path exactly (e.g. `:modules:core`). Repository-level directories alongside `modules/`:
 
 ```
 diagram-composer/
 
-├── core/
+├── modules/
 
-├── ui/
+│   ├── core/
 
-├── adapter-api/
+│   ├── ui/
 
-├── adapter-plantuml-c4/
+│   ├── adapter-api/
 
-├── adapter-mermaid/
+│   ├── adapter-plantuml-c4/
 
-├── intellij-plugin/
+│   ├── adapter-mermaid/
+
+│   └── intellij-plugin/
 
 ├── docs/
 

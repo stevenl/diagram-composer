@@ -112,18 +112,22 @@ The authoritative module layout is defined in `docs/architecture.md` Section 3. 
 ```
 diagram-composer/
 
-├── core/
+└── modules/
 
-├── ui/
+    ├── core/
 
-├── adapter-api/
+    ├── ui/
 
-├── adapter-plantuml-c4/
+    ├── adapter-api/
 
-├── adapter-mermaid/
+    ├── adapter-plantuml-c4/
 
-└── intellij-plugin/
+    ├── adapter-mermaid/
+
+    └── intellij-plugin/
 ```
+
+All code modules live under `modules/`, distinguishing them from `docs/` and other repository-level directories. Gradle module coordinates match the folder path exactly (e.g. `:modules:core`).
 
 The domain model (Section 5 below) lives inside `core/` — there is no separate `model/` module. Tests live alongside the code they test (`src/test`, `src/commonTest`, `src/jvmTest`, per each module's own source sets), not in a standalone top-level `tests/` directory.
 
