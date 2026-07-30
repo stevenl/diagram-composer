@@ -1,1 +1,12 @@
-.idea
+.gradle/
+build/
+out/
+*.iml
+.idea/
+!.idea/icon.svg
+.kotlin/
+local.properties
+*.zip
+
+# IntelliJ Platform Gradle Plugin sandbox
+.intellijPlatform/
