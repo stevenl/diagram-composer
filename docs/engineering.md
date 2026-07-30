@@ -122,7 +122,7 @@ diagram-composer/
 
     ├── adapter-plantuml-c4/
 
-    ├── adapter-mermaid/
+    ├── adapter-mermaid-flowchart/
 
     └── intellij-plugin/
 ```

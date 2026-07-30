@@ -206,8 +206,8 @@ Goal: harden the first release and confirm the architecture is genuinely languag
 1. Edge-case pass on parser (comments, unusual whitespace, partially-supported syntax) + regression tests for any bugs found.
 2. Edge-case pass on core commands (empty diagrams, duplicate names, self-relationships) + regression tests.
 3. Update `architecture.md`, `adapters.md`, `product.md`, `ui.md` to reflect final implemented behavior.
-4. Review `adapter-api` against a hypothetical Mermaid adapter (no implementation) to confirm no PlantUML-specific assumptions leaked in; document findings/adjustments needed.
-5. Create the `adapter-mermaid` module skeleton (empty `DiagramAdapter` implementation, builds and has a placeholder test) — this is the point where creating it stops being speculative, since the review in task 4 is what it's needed for. Actual Mermaid parsing/generation is out of scope for this milestone.
+4. Review `adapter-api` against a hypothetical Mermaid flowchart adapter (no implementation) to confirm no PlantUML-specific assumptions leaked in; document findings/adjustments needed. Mermaid diagram types other than flowchart (sequence, class, gantt, etc.) are out of scope — they don't map onto the same `Element`/`Relationship`/`Boundary` model and would need their own adapter module if pursued later; no such module is planned yet.
+5. Create the `adapter-mermaid-flowchart` module skeleton (empty `DiagramAdapter` implementation, builds and has a placeholder test) — this is the point where creating it stops being speculative, since the review in task 4 is what it's needed for. Actual Mermaid flowchart parsing/generation is out of scope for this milestone.
 6. Update `development.md` / `engineering.md` with setup, build, and contribution instructions reflecting the real project.
 
 **Definition of done:** all "Definition of Done" criteria from `ai-context.md` §11 hold for the whole project; docs match implementation.
