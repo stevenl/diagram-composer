@@ -21,7 +21,7 @@ The goal is to define:
 
 The plugin will be implemented using:
 
-**Kotlin**
+**Kotlin 2.1.x**
 
 Reasons:
 
@@ -31,6 +31,8 @@ Reasons:
 * Excellent interoperability with existing IntelliJ APIs.
 * Better fit for Compose.
 
+Kotlin's version is not an independent choice — the IntelliJ Platform Plugin SDK maps supported Kotlin versions to target IDE builds, and the mapping shifts (sometimes within a single IDE major version) as new IDE releases ship. Section 2.6 below fixes the target IDE range this version is valid for; if that range ever changes, re-check the current mapping at the IntelliJ Platform Plugin SDK's Kotlin support page rather than assuming this version still applies.
+
 ---
 
 ## 2.2 Build System
@@ -38,7 +40,7 @@ Reasons:
 Use:
 
 * Gradle Kotlin DSL.
-* IntelliJ Platform Gradle Plugin.
+* IntelliJ Platform Gradle Plugin 2.x (the actively maintained successor to the obsolete 1.x Gradle IntelliJ Plugin).
 
 Example:
 
@@ -102,6 +104,16 @@ All PSI and VFS reads must happen inside a `ReadAction`; all writes inside a `Wr
 ### Undo integration
 
 `WriteCommandAction` boundaries are what IntelliJ's undo stack actually records. The `Command`/`execute()`/`undo()` abstraction in Section 7 should be a thin wrapper around a single `WriteCommandAction`, not a parallel undo mechanism competing with the platform's.
+
+---
+
+## 2.6 Target IDE Version Range
+
+* **Minimum supported IDE:** 2024.3 (build 243).
+* **Maximum supported IDE:** none pinned (`until-build` left open) — avoids needing a release just to bump a ceiling.
+* **JDK:** 21 (required for IDE builds from 2024.2 onward).
+
+This "balanced" range was chosen over an older floor (e.g. 2024.2, wider install base but older APIs) and a newer one (e.g. 2026.1+, newest APIs but the Kotlin-version-to-build mapping is still actively churning as of mid-2026 — see 2.1 above). Revisit this range periodically — it is expected to move forward over the project's life, not stay fixed at 243.
 
 ---
 
