@@ -91,23 +91,14 @@ The module layout (`core/`, `ui/`, `adapter-api/`, `adapter-plantuml-c4/`, `adap
 
 ```
 diagram-composer/
-
 ├── modules/
-
 │   ├── core/
-
 │   ├── ui/
-
 │   ├── adapter-api/
-
 │   ├── adapter-plantuml-c4/
-
 │   ├── adapter-mermaid-flowchart/
-
 │   └── intellij-plugin/
-
 ├── docs/
-
 └── examples/
 ```
 
@@ -121,12 +112,9 @@ Recommended approach:
 
 ```
 main
- |
- +-- feature/create-container
- |
- +-- fix/parser-error
- |
- +-- docs/update-adapter-spec
+├── feature/create-container
+├── fix/parser-error
+└── docs/update-adapter-spec
 ```
 
 Branches should represent a single logical change.
@@ -160,14 +148,14 @@ it produces a wrong or missing version bump.
 
 Common types:
 
-| Type       | Meaning                                  | Triggers a release? |
-|------------|------------------------------------------|---------------------|
-| `feat`     | New feature                              | Minor bump          |
-| `fix`      | Bug fix                                  | Patch bump          |
-| `docs`     | Documentation only                       | No                  |
-| `test`     | Adding/correcting tests                  | No                  |
-| `refactor` | Code change that neither fixes nor adds  | No                  |
-| `chore`    | Build process, tooling, dependency bumps | No                  |
+| Type       | Meaning                                      | Triggers a release?  |
+|------------|----------------------------------------------|----------------------|
+| `feat`     | New feature                                  | Minor bump           |
+| `fix`      | Bug fix                                      | Patch bump           |
+| `docs`     | Documentation only                           | No                   |
+| `test`     | Adding/correcting tests                      | No                   |
+| `refactor` | Code change that neither fixes nor adds      | No                   |
+| `chore`    | Build process, tooling, dependency bumps     | No                   |
 
 A breaking change is indicated either with a `!` after the type/scope
 (`feat!: ...`) or a `BREAKING CHANGE:` footer, and always triggers a major

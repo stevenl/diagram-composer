@@ -25,11 +25,11 @@ All code modules live under `modules/` so they're visually distinct from `docs/`
 
 ```text
 modules/
-  core/
-  adapter-api/
-  adapter-plantuml-c4/
-  ui/
-  intellij-plugin/
+    core/
+    adapter-api/
+    adapter-plantuml-c4/
+    ui/
+    intellij-plugin/
 docs/
 gradle/
 build.gradle.kts
@@ -234,18 +234,30 @@ This milestone is intentionally placed last and is **not required** for the plan
 
 ```
 M0 Scaffolding (+ CI/CD)
- └─ M1 core domain model
-     └─ M2 adapter-api
-         └─ M3 adapter-plantuml-c4 (parse)
-             └─ M4 adapter-plantuml-c4 (generate)
-     └─ M5 core (commands)
-         └─ M6 core ↔ adapter integration   [needs M4 + M5]
-             └─ M7 UI read-only viewer
-                 └─ M8 UI editing
-                     └─ M9 UI source sync
-                         └─ M10 IntelliJ plugin integration
-                             └─ M11 Polish & Mermaid-readiness
-                                 └─ M12 Marketplace publishing (deferred, optional)
+│
+└── M1 core domain model
+    │
+    ├── M2 adapter-api
+    │   │
+    │   └── M3 adapter-plantuml-c4 (parse)
+    │       │
+    │       └── M4 adapter-plantuml-c4 (generate)
+    │
+    └── M5 core (commands)
+        │
+        └── M6 core ↔ adapter integration   [needs M4 + M5]
+            │
+            └── M7 UI read-only viewer
+                │
+                └── M8 UI editing
+                    │
+                    └── M9 UI source sync
+                        │
+                        └── M10 IntelliJ plugin integration
+                            │
+                            └── M11 Polish & Mermaid-readiness
+                                │
+                                └── M12 Marketplace publishing (deferred, optional)
 ```
 
 Each milestone's tasks are ordered so you can stop after any single task with a compiling, tested, committable state.
