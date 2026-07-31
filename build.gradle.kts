@@ -10,7 +10,12 @@ plugins {
     alias(libs.plugins.intellij.platform) apply false
 }
 
+// group and version come from root gradle.properties, which Gradle applies
+// to the root project automatically. Propagate explicitly to subprojects
+// (Gradle does not do this implicitly for `version`) rather than hardcoding
+// them here, since release.yml (docs/development.md §19) rewrites
+// gradle.properties on every release.
 allprojects {
-    group = "dev.diagramcomposer"
-    version = "0.1.0-SNAPSHOT"
+    group = rootProject.group
+    version = rootProject.version
 }

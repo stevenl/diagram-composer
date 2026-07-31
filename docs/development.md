@@ -141,17 +141,56 @@ Commits should be:
 * Focused.
 * Descriptive.
 
+## 5.1 Conventional Commits (required)
+
+Commit messages **must** follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+This is not just a style preference: the release process (§19) parses these
+messages to decide whether a release is a major/minor/patch bump and to
+generate the changelog. A malformed commit message doesn't just look messy —
+it produces a wrong or missing version bump.
+
+Common types:
+
+| Type       | Meaning                                  | Triggers a release? |
+|------------|------------------------------------------|---------------------|
+| `feat`     | New feature                              | Minor bump          |
+| `fix`      | Bug fix                                  | Patch bump          |
+| `docs`     | Documentation only                       | No                  |
+| `test`     | Adding/correcting tests                  | No                  |
+| `refactor` | Code change that neither fixes nor adds  | No                  |
+| `chore`    | Build process, tooling, dependency bumps | No                  |
+
+A breaking change is indicated either with a `!` after the type/scope
+(`feat!: ...`) or a `BREAKING CHANGE:` footer, and always triggers a major
+bump.
+
 Preferred:
 
 ```
-Add PlantUML Container parser support
+feat(adapter-plantuml-c4): add Container parser support
+
+fix(core): prevent duplicate ids when duplicating an element
 ```
 
 Avoid:
 
 ```
 Various fixes
+Add PlantUML Container parser support
 ```
+
+Commit messages are linted automatically in CI (`.github/workflows/ci.yml`)
+via `commitlint`, configured in `.commitlintrc.json`. A pull request with a
+non-conforming commit message will fail that check.
 
 ---
 
@@ -556,42 +595,94 @@ docs/development.md
 
 # 18. Continuous Integration
 
-CI should automatically run:
+Implemented in `.github/workflows/ci.yml`, triggered on every push and every
+pull request. It has no release side effects (see §19 for the separate
+release workflow).
 
-## Build
+## Build & test
 
 ```
-./gradlew build
+./gradlew build test
 ```
 
 ---
 
-## Tests
+## Commit message lint
 
-```
-./gradlew test
-```
+Every commit is checked against Conventional Commits (§5.1) using
+`commitlint`, configured in `.commitlintrc.json`.
 
 ---
 
 ## Static Analysis
 
-Examples:
+Not yet enabled. Examples for future consideration:
 
-* Kotlin compiler checks.
-* Detekt (optional).
-* Dependency checks.
+* Detekt.
+* Dependency vulnerability checks.
+
+---
+
+## 18.1 Branch Protection (one-time manual setup)
+
+CI enforcement only has teeth if `main` is protected. This is a repository
+setting, not something a workflow file can configure, so it must be set up
+once, manually, in GitHub: **Settings → Branches → Branch protection rules**
+for `main`.
+
+Required:
+
+* "Require status checks to pass before merging", with **both** the
+  `Build & test` and `Commit message lint` jobs from `ci.yml` selected as
+  required checks.
+* "Require branches to be up to date before merging" (recommended, so a
+  stale branch can't merge around a check that would now fail).
+
+Without this, `ci.yml` still runs and reports failures, but nothing stops a
+failing PR from being merged anyway.
 
 ---
 
 # 19. Release Process
 
-A release should include:
+Releases are automated by `.github/workflows/release.yml`, using
+[release-please](https://github.com/googleapis/release-please), driven
+entirely by the Conventional Commits (§5.1) merged to `main`.
 
-* Passing CI.
-* Updated changelog.
-* Updated version.
-* Documentation review.
+## 19.1 How it works
+
+1. Every push to `main` runs `release-please-action`, which scans commits
+   since the last release tag.
+2. If there are releasable commits (`feat`, `fix`, or anything with a
+   breaking-change marker), it opens/updates a standing **release PR**
+   containing:
+    * the computed next version, written into the root `gradle.properties`
+      (`version=...`, consumed automatically by Gradle — see
+      `build.gradle.kts`),
+    * a generated `CHANGELOG.md` entry.
+3. That PR is reviewed like any other change (it's a normal PR against
+   `main`, subject to the same branch protection in §18.1).
+4. Merging it is itself a push to `main`, which triggers the workflow again.
+   This time release-please recognizes its own release PR was merged, and:
+    * creates a git tag for the new version,
+    * publishes a GitHub Release with the generated changelog.
+5. A second job in the same workflow, gated on a release having just been
+   created, then runs `./gradlew :modules:intellij-plugin:buildPlugin` and
+   uploads the resulting plugin zip to that GitHub Release as an artifact.
+
+## 19.2 What this does *not* do
+
+Publishing to the JetBrains Marketplace is a separate, deliberately
+unaddressed step — see `docs/implementation-plan.md` Milestone 12. Until
+then, the plugin zip attached to each GitHub Release is the only
+distribution channel.
+
+## 19.3 Configuration
+
+* `release-please-config.json` — release strategy and the `gradle.properties`
+  version-file mapping.
+* `.release-please-manifest.json` — release-please's record of the last
+  released version per package (this repo has one package: `.`).
 
 ---
 
