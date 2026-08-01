@@ -4,19 +4,11 @@
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.intellij.platform)
+    id("org.jetbrains.intellij.platform")
 }
 
 kotlin {
     jvmToolchain(21)
-}
-
-repositories {
-    mavenCentral()
-
-    intellijPlatform {
-        defaultRepositories()
-    }
 }
 
 dependencies {
@@ -25,7 +17,8 @@ dependencies {
 
     intellijPlatform {
         create("IC", "2024.3")
-        instrumentationTools()
+        // instrumentationTools() was removed from the IntelliJ Platform
+        // Gradle Plugin in later 2.x releases — it's no longer required.
     }
 }
 

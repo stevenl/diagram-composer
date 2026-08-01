@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
     alias(libs.plugins.compose) apply false
-    alias(libs.plugins.intellij.platform) apply false
 }
 
 // group and version come from root gradle.properties, which Gradle applies
