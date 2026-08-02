@@ -123,21 +123,15 @@ Example:
 ```text
 Mobile App
 
-    |
-    |
-    v
+    ↓
 
 API Gateway
 
-    |
-    |
-    v
+    ↓
 
 Payment Service
 
-    |
-    |
-    v
+    ↓
 
 Payment Provider
 ```

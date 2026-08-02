@@ -47,22 +47,13 @@ The adapter is responsible for:
 
 # 4. Overall Architecture
 
-```text
-               Diagram Editor
-
-                      │
-
-              Core Diagram Model
-
-                      │
-
-             Diagram Adapter API
-
-      ┌───────────────┼────────────────┐
-
-      ▼               ▼                ▼
-
- PlantUML C4       Mermaid       Future Adapter
+```mermaid
+flowchart TD
+    Editor["Diagram Editor"] --> Core["Core Diagram Model"]
+    Core --> API["Diagram Adapter API"]
+    API --> PlantUML["PlantUML C4"]
+    API --> Mermaid["Mermaid"]
+    API --> Future["Future Adapter"]
 ```
 
 The editor communicates only with the Adapter API.
@@ -108,7 +99,7 @@ Each adapter registers itself with the framework.
 Example metadata:
 
 | Property             | Example              |
-| -------------------- | -------------------- |
+|----------------------|----------------------|
 | Identifier           | `plantuml-c4`        |
 | Display Name         | PlantUML C4          |
 | Version              | 1.0                  |
@@ -287,11 +278,11 @@ PlantUML
 
 Container()
 
-  ↓
+   ↓
 
 Entity
 
-  ↓
+   ↓
 
 Visual Editor
 ```
@@ -301,11 +292,11 @@ Likewise:
 ```text
 Visual Edit
 
-  ↓
+   ↓
 
 Entity
 
-  ↓
+   ↓
 
 PlantUML Container()
 ```
@@ -331,7 +322,7 @@ Supports:
 ## Supported Entities
 
 | C4 Element  | Core Entity |
-| ----------- | ----------- |
+|-------------|-------------|
 | Person      | Person      |
 | Person_Ext  | Person      |
 | System      | System      |
@@ -478,28 +469,32 @@ The framework should allow multiple adapters to coexist.
 Each adapter must provide tests for:
 
 ## Parsing
-
+```
 Input source → Diagram Model
+```
 
 ## Generation
-
+```
 Diagram Model → Source
+```
 
 ## Round-trip
 
+```
 Source
 
-  ↓
+   ↓
 
 Diagram Model
 
-  ↓
+   ↓
 
 Source
 
-  ↓
+   ↓
 
 Diagram Model
+```
 
 The second model should be semantically equivalent to the first.
 

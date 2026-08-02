@@ -229,6 +229,12 @@ Documentation should evolve alongside the implementation.
 
 ---
 
+# Diagram Conventions
+
+Use Mermaid for diagrams representing architecture, workflows, data flows, sequences, state transitions, or other relationships that are expected to evolve. Simple illustrative diagrams may remain as ASCII when Mermaid would add unnecessary complexity. Keep diagrams close to the specification they describe and update them when the underlying design changes.
+
+---
+
 # Before Writing Code
 
 Understand the existing implementation.

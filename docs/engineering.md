@@ -123,19 +123,12 @@ The authoritative module layout is defined in `docs/architecture.md` Section 3. 
 
 ```
 diagram-composer/
-
 └── modules/
-
     ├── core/
-
     ├── ui/
-
     ├── adapter-api/
-
     ├── adapter-plantuml-c4/
-
     ├── adapter-mermaid-flowchart/
-
     └── intellij-plugin/
 ```
 
@@ -283,14 +276,10 @@ The UI should follow:
 
 ```
 DiagramScreen
-
- ├── Toolbar
-
- ├── Canvas
-
- ├── PropertiesPanel
-
- └── Explorer
+├── Toolbar
+├── Canvas
+├── PropertiesPanel
+└── Explorer
 ```
 
 ---
@@ -430,11 +419,11 @@ Maintain three representations:
 ```
 Text
 
-↓
+   ↓
 
 Parsed Model
 
-↓
+   ↓
 
 Visual Model
 ```

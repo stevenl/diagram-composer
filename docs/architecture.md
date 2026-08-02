@@ -107,35 +107,18 @@ PlantUML / Mermaid / Other
 
 ## 2.1 Component Overview
 
-```
-+------------------------------------------------+
-|                IntelliJ Platform               |
-|                                                |
-|  +------------------------------------------+  |
-|  |         Diagram Composer Plugin          |  |
-|  |                                          |  |
-|  |  +-------------+     +----------------+  |  |
-|  |  | UI Layer    |     | Editor Actions |  |  |
-|  |  +-------------+     +----------------+  |  |
-|  |          |                    |          |  |
-|  |          +----------+---------+          |  |
-|  |                     |                    |  |
-|  |                Diagram Core              |  |
-|  |                     |                    |  |
-|  |          +----------+---------+          |  |
-|  |          | Adapter Framework  |          |  |
-|  |          +----------+---------+          |  |
-|  |                     |                    |  |
-|  +---------------------|--------------------+  |
-|                        |                       |
-+------------------------|-----------------------+
-                         |
-        +----------------+----------------+
-        |                                 |
-+---------------+                 +---------------+
-| PlantUML C4   |                 | Mermaid       |
-| Adapter       |                 | Adapter       |
-+---------------+                 +---------------+
+```mermaid
+flowchart TD
+    subgraph IntelliJ["IntelliJ Platform"]
+        subgraph Plugin["Diagram Composer Plugin"]
+            UILayer["UI Layer"] --> Core["Diagram Core"]
+            EditorActions["Editor Actions"] --> Core
+            Core --> AdapterFramework["Adapter Framework"]
+        end
+    end
+
+    AdapterFramework --> PlantUML["PlantUML C4 Adapter"]
+    AdapterFramework --> Mermaid["Mermaid Flowchart Adapter"]
 ```
 
 ---
@@ -148,20 +131,13 @@ All code modules live under a top-level `modules/` directory, so they are visual
 
 ```
 diagram-composer/
-
-    modules/
-
-        core/
-
-        ui/
-
-        adapter-api/
-
-        adapter-plantuml-c4/
-
-        adapter-mermaid-flowchart/
-
-        intellij-plugin/
+└── modules/
+    ├── core/
+    ├── ui/
+    ├── adapter-api/
+    ├── adapter-plantuml-c4/
+    ├── adapter-mermaid-flowchart/
+    └── intellij-plugin/
 ```
 
 This is the authoritative module layout — other documents reference it rather than redefining it.
@@ -285,40 +261,29 @@ Examples:
 
 Model:
 
-```
-Entity
-
-id
-
-name
-
-type
-
-description
-
-technology
-
-tags
-
-properties
+```mermaid
+classDiagram
+class Entity {
+    id
+    name
+    type
+    description
+    technology
+    tags
+    properties
+}
 ```
 
 Example:
 
-```
-Entity
-
-id:
-payment-api
-
-name:
-Payment API
-
-type:
-Container
-
-technology:
-Spring Boot
+```mermaid
+classDiagram
+class Entity {
+    id = payment-api
+    name = Payment API
+    type = Container
+    technology = Spring Boot
+}
 ```
 
 ---
@@ -329,36 +294,35 @@ Represents communication or dependency.
 
 Model:
 
-```
-Relationship
-
-id
-
-source
-
-destination
-
-description
-
-technology
-
-type
-
-properties
+```mermaid
+classDiagram
+class Relationship {
+    id
+    source
+    destination
+    description
+    technology
+    type
+    properties
+}
 ```
 
 Example:
 
+```mermaid
+classDiagram
+    class Relationship {
+        source = Frontend
+        destination = Payment API
+        description = "Uses REST API"
+    }
+```
 ```
 Frontend
 
-    |
-    |
-    v
+    ↓  "Uses REST API"
 
 Payment API
-
-"Uses REST API"
 ```
 
 ---
@@ -375,16 +339,14 @@ Examples:
 
 Model:
 
-```
-Boundary
-
-id
-
-name
-
-type
-
-children (ids of the entities or nested boundaries it contains)
+```mermaid
+classDiagram
+class Boundary {
+    id
+    name
+    type
+    children
+}
 ```
 
 ---

@@ -1,0 +1,18 @@
+<idea-plugin>
+    <id>dev.diagramcomposer</id>
+    <name>Diagram Composer</name>
+    <vendor>Diagram Composer</vendor>
+
+    <description>
+        <![CDATA[
+        Visual authoring for text-based diagrams (PlantUML C4, with Mermaid
+        planned). Scaffolding only at this stage — no functionality yet.
+        ]]>
+    </description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Tool window registration lands in Milestone 10. -->
+    </extensions>
+</idea-plugin>
