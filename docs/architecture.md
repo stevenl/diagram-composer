@@ -199,7 +199,7 @@ adapter-plantuml-c4
 adapter-mermaid-flowchart
 ```
 
-Mermaid flowchart (nodes, edges, subgraphs) maps onto the same `Element`/`Relationship`/`Boundary` model as PlantUML C4. Other Mermaid diagram types (sequence, class, gantt, etc.) are structurally different — ordered messages, class members, time-based tasks — and would each need their own adapter module (e.g. `adapter-mermaid-sequence`) if and when they're pursued; none is planned currently.
+Mermaid flowchart (nodes, edges, subgraphs) maps onto the same `Entity`/`Relationship`/`Boundary` model as PlantUML C4. Other Mermaid diagram types (sequence, class, gantt, etc.) are structurally different — ordered messages, class members, time-based tasks — and would each need their own adapter module (e.g. `adapter-mermaid-sequence`) if and when they're pursued; none is planned currently.
 
 Responsibilities:
 

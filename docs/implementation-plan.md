@@ -55,14 +55,14 @@ settings.gradle.kts
 
 Goal: a language-independent, immutable diagram model with no IntelliJ/language-specific code. This lives inside the `core` module (in its own package, e.g. `core.model`) — there is no separate `model` module, per `docs/architecture.md` §3 and `docs/engineering.md` §3.
 
-1. Define `ElementId`, `RelationshipId`, and other value-object identifiers as inline/value classes.
-2. Define `Element` as an immutable data class (name, type, properties) — no PlantUML-specific fields.
+1. Define `EntityId`, `RelationshipId`, `BoundaryId`, and `BoundaryChildId` as inline/value classes (see `docs/architecture.md` §4.5 for the class diagram).
+2. Define `Entity` as an immutable data class (name, type, properties) — no PlantUML-specific fields.
 3. Define `Relationship` as an immutable data class (source, target, label, type).
-4. Define `Boundary` as an immutable data class (name, contained element IDs).
-5. Define `Property` (key/value, typed if needed) and attach to `Element`/`Relationship`.
-6. Define `Diagram` aggregate root holding elements, relationships, boundaries, with basic invariant checks (e.g., no dangling relationship references).
+4. Define `Boundary` as an immutable data class (name, contained entity/boundary IDs).
+5. Attach a `properties: Map<String, String>` field to `Entity`/`Relationship` (per `docs/engineering.md` §5) — no separate `Property` type; a plain map is simplest until a typed property actually needs its own behaviour.
+6. Define `Diagram` aggregate root holding entities, relationships, boundaries, with basic invariant checks (e.g., no dangling relationship references).
 7. Unit tests: construction, equality, `copy()` semantics for each type.
-8. Unit tests: `Diagram` invariant violations (e.g., relationship referencing missing element) are rejected or reported.
+8. Unit tests: `Diagram` invariant violations (e.g., relationship referencing missing entity) are rejected or reported.
 
 **Definition of done:** the domain model package inside `core` has zero dependencies on `adapter-api`, `adapter-plantuml-c4`, or IntelliJ; full test coverage of invariants.
 
@@ -88,10 +88,10 @@ Goal: the contract that all language adapters (PlantUML now, Mermaid later) must
 Goal: parse PlantUML C4 source into the core `Diagram` model, incrementally by construct.
 
 1. Set up `adapter-plantuml-c4` module skeleton implementing `DiagramAdapter` (generate can throw `NotImplemented` for now).
-2. Implement parsing of element declarations only (e.g., `Person`, `System`) → `Element` list. Tests with sample snippets.
+2. Implement parsing of entity declarations only (e.g., `Person`, `System`) → `Entity` list. Tests with sample snippets.
 3. Implement parsing of relationships (e.g., `Rel(...)`) → `Relationship` list. Tests.
 4. Implement parsing of boundaries (e.g., `System_Boundary`, `Container_Boundary`) → `Boundary` list, including nesting. Tests.
-5. Implement parsing of element/relationship properties (labels, technology, description). Tests.
+5. Implement parsing of entity/relationship properties (labels, technology, description). Tests.
 6. Implement error handling for malformed/unrecognized syntax → `ParseError` with useful messages. Tests with intentionally broken input.
 
 **Definition of done:** parser handles a representative real-world C4 PlantUML sample end-to-end (elements + relationships + boundaries + properties), with parser tests for each construct plus at least one malformed-input test per construct.
@@ -118,11 +118,11 @@ Goal: generate valid PlantUML C4 source from the core `Diagram` model.
 Goal: command-based editing of the `Diagram` model with undo/redo, independent of any language or UI.
 
 1. Define `Command` interface with `execute(diagram: Diagram): Diagram` and `undo(diagram: Diagram): Diagram` (or an equivalent state-transition pattern — decide and document the chosen pattern first).
-2. Implement `AddElementCommand` + execute/undo tests.
-3. Implement `RemoveElementCommand` (with cascading relationship handling) + execute/undo tests.
+2. Implement `AddEntityCommand` + execute/undo tests.
+3. Implement `RemoveEntityCommand` (with cascading relationship handling) + execute/undo tests.
 4. Implement `AddRelationshipCommand` + execute/undo tests.
 5. Implement `RemoveRelationshipCommand` + execute/undo tests.
-6. Implement `EditPropertyCommand` (elements and relationships) + execute/undo tests.
+6. Implement `EditPropertyCommand` (entities and relationships) + execute/undo tests.
 7. Implement `AddBoundaryCommand` / `EditBoundaryCommand` + execute/undo tests.
 8. Implement a `CommandHistory` (undo/redo stack) service + tests (execute, undo, redo, redo-invalidated-by-new-command).
 9. Implement model validation service (uses `Diagram` invariants from Milestone 1, surfaces violations before commit) + tests.
@@ -161,10 +161,10 @@ Goal: minimal Compose UI that displays a `Diagram` from `core`, no editing yet.
 
 Goal: users can perform core edits visually, dispatching `core` commands.
 
-1. Add "add element" UI flow (form/dialog) dispatching `AddElementCommand`.
-2. Add "edit element properties" UI flow dispatching `EditPropertyCommand`.
+1. Add "add entity" UI flow (form/dialog) dispatching `AddEntityCommand`.
+2. Add "edit entity properties" UI flow dispatching `EditPropertyCommand`.
 3. Add "add relationship" UI flow dispatching `AddRelationshipCommand`.
-4. Add "remove element/relationship" UI flow dispatching remove commands.
+4. Add "remove entity/relationship" UI flow dispatching remove commands.
 5. Wire undo/redo UI controls to `CommandHistory`.
 6. UI/integration tests for each flow (state changes correctly after each user action).
 
@@ -206,7 +206,7 @@ Goal: harden the first release and confirm the architecture is genuinely languag
 1. Edge-case pass on parser (comments, unusual whitespace, partially-supported syntax) + regression tests for any bugs found.
 2. Edge-case pass on core commands (empty diagrams, duplicate names, self-relationships) + regression tests.
 3. Update `architecture.md`, `adapters.md`, `product.md`, `ui.md` to reflect final implemented behavior.
-4. Review `adapter-api` against a hypothetical Mermaid flowchart adapter (no implementation) to confirm no PlantUML-specific assumptions leaked in; document findings/adjustments needed. Mermaid diagram types other than flowchart (sequence, class, gantt, etc.) are out of scope — they don't map onto the same `Element`/`Relationship`/`Boundary` model and would need their own adapter module if pursued later; no such module is planned yet.
+4. Review `adapter-api` against a hypothetical Mermaid flowchart adapter (no implementation) to confirm no PlantUML-specific assumptions leaked in; document findings/adjustments needed. Mermaid diagram types other than flowchart (sequence, class, gantt, etc.) are out of scope — they don't map onto the same `Entity`/`Relationship`/`Boundary` model and would need their own adapter module if pursued later; no such module is planned yet.
 5. Create the `adapter-mermaid-flowchart` module skeleton (empty `DiagramAdapter` implementation, builds and has a placeholder test) — this is the point where creating it stops being speculative, since the review in task 4 is what it's needed for. Actual Mermaid flowchart parsing/generation is out of scope for this milestone.
 6. Update `development.md` / `engineering.md` with setup, build, and contribution instructions reflecting the real project.
 

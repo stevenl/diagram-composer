@@ -244,8 +244,8 @@ UI State Refresh
 Example:
 
 ```kotlin
-CreateElementCommand
-RenameElementCommand
+CreateEntityCommand
+RenameEntityCommand
 DeleteRelationshipCommand
 ```
 
