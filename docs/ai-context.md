@@ -260,7 +260,9 @@ A task is complete only when:
 
 Current implementation stage:
 
-> **Project specifications complete. Implementation has not yet begun.**
+> **Milestone 0 (project scaffolding) and Milestone 1 (core domain model) complete. Milestone 2 (adapter API) is next.**
+
+See `docs/implementation-plan.md` for the full milestone breakdown and current position.
 
 The implementation should proceed incrementally through defined milestones.
 
