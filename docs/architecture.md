@@ -199,7 +199,7 @@ adapter-plantuml-c4
 adapter-mermaid-flowchart
 ```
 
-Mermaid flowchart (nodes, edges, subgraphs) maps onto the same `Element`/`Relationship`/`Boundary` model as PlantUML C4. Other Mermaid diagram types (sequence, class, gantt, etc.) are structurally different — ordered messages, class members, time-based tasks — and would each need their own adapter module (e.g. `adapter-mermaid-sequence`) if and when they're pursued; none is planned currently.
+Mermaid flowchart (nodes, edges, subgraphs) maps onto the same `Entity`/`Relationship`/`Boundary` model as PlantUML C4. Other Mermaid diagram types (sequence, class, gantt, etc.) are structurally different — ordered messages, class members, time-based tasks — and would each need their own adapter module (e.g. `adapter-mermaid-sequence`) if and when they're pursued; none is planned currently.
 
 Responsibilities:
 
@@ -348,6 +348,109 @@ class Boundary {
     children
 }
 ```
+
+---
+
+# 4.5 Class Diagram
+
+Sections 4.1–4.4 above introduce `Diagram`, `Entity`, `Relationship`, and `Boundary` individually. The diagram below shows the same four types together, plus how they relate to one another — composition (a `Diagram` owns its entities/relationships/boundaries), association by id (a `Relationship` connects two `Entity` ids; a `Boundary`'s children are either entity or boundary ids), and each type's enumerated `type` field.
+
+Ids are typed per kind (`EntityId`, `RelationshipId`, `BoundaryId`) rather than plain strings, so a `RelationshipId` can't be passed where an `EntityId` is expected. `BoundaryChildId` is the union of "an entity id" or "a nested boundary id" that a boundary's `children` list holds — this is what lets the model reject a boundary that contains something that doesn't exist (Section 7 "Undo and Redo" invariants aside, this validation happens at construction time in `core`, independent of undo/redo).
+
+```mermaid
+classDiagram
+    class Diagram {
+        entities
+        relationships
+        boundaries
+    }
+
+    class Entity {
+        id
+        name
+        type
+        description
+        technology
+        tags
+        properties
+    }
+
+    class Relationship {
+        id
+        sourceId
+        targetId
+        description
+        technology
+        type
+        properties
+    }
+
+    class Boundary {
+        id
+        name
+        type
+        children
+    }
+
+    class EntityId
+    class RelationshipId
+    class BoundaryId
+
+    class BoundaryChildId {
+        <<sealed>>
+    }
+    class OfEntity {
+        id : EntityId
+    }
+    class OfBoundary {
+        id : BoundaryId
+    }
+
+    class EntityType {
+        <<enumeration>>
+        PERSON
+        SYSTEM
+        CONTAINER
+        COMPONENT
+        DATABASE
+    }
+
+    class RelationshipType {
+        <<enumeration>>
+        DEFAULT
+        BIDIRECTIONAL
+    }
+
+    class BoundaryType {
+        <<enumeration>>
+        ENTERPRISE
+        SYSTEM
+        CONTAINER
+    }
+
+    Diagram "1" *-- "0..*" Entity : entities
+    Diagram "1" *-- "0..*" Relationship : relationships
+    Diagram "1" *-- "0..*" Boundary : boundaries
+
+    Entity "1" -- "1" EntityId : id
+    Relationship "1" -- "1" RelationshipId : id
+    Boundary "1" -- "1" BoundaryId : id
+
+    Relationship "0..*" --> "1" EntityId : sourceId
+    Relationship "0..*" --> "1" EntityId : targetId
+
+    Boundary "1" *-- "0..*" BoundaryChildId : children
+    BoundaryChildId <|-- OfEntity
+    BoundaryChildId <|-- OfBoundary
+    OfEntity --> EntityId
+    OfBoundary --> BoundaryId
+
+    Entity --> EntityType : type
+    Relationship --> RelationshipType : type
+    Boundary --> BoundaryType : type
+```
+
+Note that `Relationship` and `Boundary` only ever hold *ids*, never direct references to `Entity`/`Boundary` instances — this is what keeps them free-standing value objects rather than requiring a live `Diagram` to construct. `Diagram` itself is responsible for rejecting a relationship or boundary whose ids don't resolve within it (a "dangling reference"), rather than that check living in `Relationship` or `Boundary`.
 
 ---
 

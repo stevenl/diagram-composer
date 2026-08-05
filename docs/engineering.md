@@ -162,6 +162,8 @@ It must not depend on:
 
 The canonical domain model is defined in `docs/architecture.md` Section 4 (Entity, Relationship, Boundary). This section is not a competing definition — it is that same model expressed as Kotlin data classes for implementation reference. If this ever drifts from architecture.md, architecture.md wins.
 
+Ids are wrapped in per-type `value class`es (`EntityId`, `RelationshipId`, `BoundaryId`) rather than passed around as raw `String`. This is a Milestone 1 implementation choice, not a change to the conceptual model in architecture.md §4 — an `EntityId` still just carries a string underneath. It exists so the compiler rejects passing, say, a `RelationshipId` where an `EntityId` is expected, which a raw `String` parameter cannot catch. See `docs/architecture.md` §4.5 for the full class diagram.
+
 Example:
 
 ```kotlin
@@ -177,8 +179,11 @@ data class Diagram(
 ## Entity
 
 ```kotlin
+@JvmInline
+value class EntityId(val value: String)
+
 data class Entity(
-    val id: String,
+    val id: EntityId,
     val name: String,
     val type: EntityType,
     val description: String? = null,
@@ -193,10 +198,13 @@ data class Entity(
 ## Relationship
 
 ```kotlin
+@JvmInline
+value class RelationshipId(val value: String)
+
 data class Relationship(
-    val id: String,
-    val sourceId: String,
-    val targetId: String,
+    val id: RelationshipId,
+    val sourceId: EntityId,
+    val targetId: EntityId,
     val description: String? = null,
     val technology: String? = null,
     val type: RelationshipType = RelationshipType.DEFAULT,
@@ -208,12 +216,22 @@ data class Relationship(
 
 ## Boundary
 
+A boundary's children may be either entities or nested boundaries (architecture.md §4.4). `BoundaryChildId` is a sealed interface over `EntityId`/`BoundaryId` expressing that union, rather than an untyped `List<String>` — this is what lets the core model reject a boundary that references a missing entity or boundary at construction time instead of only at parse/generate time.
+
 ```kotlin
+sealed interface BoundaryChildId {
+    data class OfEntity(val id: EntityId) : BoundaryChildId
+    data class OfBoundary(val id: BoundaryId) : BoundaryChildId
+}
+
+@JvmInline
+value class BoundaryId(val value: String)
+
 data class Boundary(
-    val id: String,
+    val id: BoundaryId,
     val name: String,
     val type: BoundaryType,
-    val children: List<String> = emptyList() // ids of contained entities or nested boundaries
+    val children: List<BoundaryChildId> = emptyList() // contained entities or nested boundaries
 )
 ```
 
@@ -244,8 +262,8 @@ UI State Refresh
 Example:
 
 ```kotlin
-CreateElementCommand
-RenameElementCommand
+CreateEntityCommand
+RenameEntityCommand
 DeleteRelationshipCommand
 ```
 

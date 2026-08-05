@@ -340,7 +340,7 @@ Example:
 ```
 CreateContainerCommandTest
 
-RenameElementCommandTest
+RenameEntityCommandTest
 
 PlantUmlParserTest
 ```
@@ -364,7 +364,7 @@ Container(api,"API")
 Expected:
 
 ```
-Element(
+Entity(
     id="api",
     type=Container
 )
@@ -448,14 +448,14 @@ UI tests should cover important user workflows.
 
 Examples:
 
-## Create Element
+## Create Entity
 
 ```
 Open diagram
 
 Click Container
 
-Create element
+Create entity
 
 Verify source updated
 ```

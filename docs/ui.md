@@ -118,9 +118,9 @@ The visual editor provides semantic editing.
 
 Responsibilities:
 
-* Display diagram elements.
+* Display diagram entities.
 * Allow selection.
-* Create elements.
+* Create entities.
 * Create relationships.
 * Edit properties.
 
@@ -169,7 +169,7 @@ The adapter provides available actions.
 
 ---
 
-# 5. Creating Diagram Elements
+# 5. Creating Diagram Entities
 
 ## 5.1 Creation Workflow
 
@@ -178,9 +178,9 @@ Example: Create Container
 1. User selects "Container".
 2. Cursor changes to creation mode.
 3. User clicks diagram area.
-4. Element creation dialog appears.
+4. Entity creation dialog appears.
 5. User enters details.
-6. Element is created.
+6. Entity is created.
 7. Source is updated.
 
 ---
@@ -231,13 +231,13 @@ The user may override it.
 
 ---
 
-# 6. Selecting Elements
+# 6. Selecting Entities
 
 ## 6.1 Selection Behaviour
 
-Selecting an element:
+Selecting an entity:
 
-* Highlights the element.
+* Highlights the entity.
 * Shows properties.
 * Enables context actions.
 
@@ -265,11 +265,11 @@ Spring Boot
 
 ## 7.1 Purpose
 
-The property panel provides structured editing of diagram elements.
+The property panel provides structured editing of diagram entities.
 
 ---
 
-## 7.2 Element Properties
+## 7.2 Entity Properties
 
 Common properties:
 
@@ -313,9 +313,9 @@ HTTPS
 
 # 8. Context Menus
 
-## 8.1 Element Context Menu
+## 8.1 Entity Context Menu
 
-Right-click element:
+Right-click entity:
 
 ```text
 Edit Properties
@@ -352,8 +352,8 @@ Delete
 ## 9.1 Workflow
 
 1. Select Relationship tool.
-2. Click source element.
-3. Click destination element.
+2. Click source entity.
+3. Click destination entity.
 4. Enter relationship details.
 5. Relationship is created.
 
@@ -363,7 +363,7 @@ Delete
 
 Future enhancement:
 
-Hold a keyboard modifier while selecting an element.
+Hold a keyboard modifier while selecting an entity.
 
 Example:
 
@@ -426,7 +426,7 @@ payment
 
 Find:
 
-* Elements.
+* Entities.
 * Relationships.
 * Properties.
 
@@ -446,7 +446,7 @@ All shortcuts should integrate with IntelliJ keymaps.
 
 | Action              | Shortcut     |
 |---------------------|--------------|
-| Create Element      | Ctrl+N       |
+| Create Entity       | Ctrl+N       |
 | Create Relationship | Ctrl+Shift+R |
 | Delete Selected     | Delete       |
 | Rename              | Shift+F6     |
@@ -456,7 +456,7 @@ All shortcuts should integrate with IntelliJ keymaps.
 
 # 12. Multi-Selection
 
-Support selecting multiple elements.
+Support selecting multiple entities.
 
 Operations:
 
@@ -474,7 +474,7 @@ Operations:
 Workflow:
 
 1. Select boundary.
-2. Select elements.
+2. Select entities.
 3. Create grouping.
 
 Example:
@@ -610,7 +610,7 @@ Choose Template:
 Provide IntelliJ actions:
 
 * Open Diagram Composer.
-* Create Element.
+* Create Entity.
 * Create Relationship.
 * Format Diagram.
 * Validate Diagram.
@@ -624,7 +624,7 @@ Optional tool window:
 ```text
 Diagram Composer
 
-Elements
+Entities
 
 Templates
 
