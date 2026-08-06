@@ -1,5 +1,4 @@
 // adapter-plantuml-c4: the first concrete DiagramAdapter implementation.
-// No parsing/generation logic yet — Milestone 3/4 scope. This is scaffolding only.
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
