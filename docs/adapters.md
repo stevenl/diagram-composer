@@ -173,6 +173,8 @@ interface DiagramAdapter {
 
 The exact interface may evolve, but backwards compatibility should be maintained where possible.
 
+The interface actually implemented in `adapter-api` (Milestone 2) is a smaller, concrete subset of the above — see `docs/architecture.md` §5.3 for the class diagram of `DiagramAdapter`, `AdapterMetadata`, `ParseResult`, and `ParseError`.
+
 ---
 
 # 9. Parsing Requirements

@@ -260,7 +260,7 @@ A task is complete only when:
 
 Current implementation stage:
 
-> **Milestone 0 (project scaffolding) and Milestone 1 (core domain model) complete. Milestone 2 (adapter API) is next.**
+> **Milestone 0 (project scaffolding), Milestone 1 (core domain model), and Milestone 2 (adapter API) complete. Milestone 3 (PlantUML C4 adapter — parsing) is next.**
 
 See `docs/implementation-plan.md` for the full milestone breakdown and current position.
 

@@ -502,6 +502,63 @@ interface DiagramAdapter {
 
 ---
 
+## 5.3 Adapter API — Class Diagram
+
+Section 5.2 sketches the adapter interface conceptually; this is the actual shape implemented in `adapter-api` as of Milestone 2 (`docs/implementation-plan.md`). It's intentionally a smaller surface than Section 5.2's conceptual API — `validate` and `capabilities` are deferred until an adapter exists to motivate their shape (`ai-context.md` §5, "Keep It Simple"). `metadata` replaces a separate `capabilities()` call for now, since Milestone 3's PlantUML C4 adapter only needs a language id and file extensions for IntelliJ file-type association.
+
+`ParseResult` is a sealed result type rather than a nullable `Diagram` or a thrown exception, so callers must handle parse failures explicitly and see every collected `ParseError` at once (`docs/adapters.md` §9 — the parser "must never silently discard information").
+
+```mermaid
+classDiagram
+    class DiagramAdapter {
+        <<interface>>
+        metadata : AdapterMetadata
+        parse(source: String) ParseResult
+        generate(diagram: Diagram) String
+    }
+
+    class AdapterMetadata {
+        languageId
+        displayName
+        fileExtensions
+    }
+
+    class ParseResult {
+        <<sealed>>
+    }
+    class Success {
+        diagram : Diagram
+    }
+    class Failure {
+        errors : List~ParseError~
+    }
+
+    class ParseError {
+        message
+        line
+        column
+    }
+
+    class Diagram {
+        entities
+        relationships
+        boundaries
+    }
+
+    DiagramAdapter "1" --> "1" AdapterMetadata : metadata
+    DiagramAdapter ..> ParseResult : parse() returns
+    DiagramAdapter ..> Diagram : generate() takes / parse() produces
+
+    ParseResult <|-- Success
+    ParseResult <|-- Failure
+    Success --> Diagram : diagram
+    Failure "1" *-- "1..*" ParseError : errors
+```
+
+`Diagram` here is the same aggregate root defined in Section 4.5 — `adapter-api` depends on `core`'s domain model types but adds none of its own; `DiagramAdapter`, `AdapterMetadata`, `ParseResult`, and `ParseError` are the only new types this module introduces.
+
+---
+
 # 6. Synchronisation Architecture
 
 Synchronisation is a core feature.
