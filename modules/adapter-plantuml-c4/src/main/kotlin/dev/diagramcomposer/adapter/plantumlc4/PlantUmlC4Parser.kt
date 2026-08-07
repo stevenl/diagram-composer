@@ -214,12 +214,17 @@ internal object PlantUmlC4Parser {
             buildMap {
                 if (direction != null) put("direction", direction)
                 for ((name, value) in args.named) {
-                    if (name !in setOf("descr", "techn", "tags")) put(name, value)
+                    if (name !in setOf("descr", "techn", "id")) put(name, value)
                 }
             }
 
         return Relationship(
-            id = RelationshipId("rel-$index"),
+            // PlantUML relationships have no natural id/alias slot. `$id=` is this
+            // adapter's own extension (emitted by PlantUmlC4Generator) so that a
+            // generate()-then-parse() round-trip recovers the same RelationshipId
+            // rather than renumbering; hand-written source without `$id` falls
+            // back to a sequential id, as before.
+            id = args.named["id"]?.let { RelationshipId(it) } ?: RelationshipId("rel-$index"),
             sourceId = EntityId(sourceId),
             targetId = EntityId(targetId),
             description = description,
