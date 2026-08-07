@@ -10,6 +10,6 @@ import androidx.compose.runtime.Composable
  * Milestones 7-9.
  */
 @Composable
-fun DiagramComposerApp() {
+fun diagramComposerApp() {
     // No content yet — scaffolding only.
 }

@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class EntityTest {
-
-    private fun sampleEntity() = Entity(
-        id = EntityId("payment-api"),
-        name = "Payment API",
-        type = EntityType.CONTAINER,
-        technology = "Spring Boot",
-    )
+    private fun sampleEntity() =
+        Entity(
+            id = EntityId("payment-api"),
+            name = "Payment API",
+            type = EntityType.CONTAINER,
+            technology = "Spring Boot",
+        )
 
     @Test
     fun `entities with the same field values are equal`() {

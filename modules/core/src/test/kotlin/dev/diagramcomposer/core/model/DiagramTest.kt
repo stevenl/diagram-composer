@@ -5,22 +5,23 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class DiagramTest {
-
     private val webApp = Entity(id = EntityId("web"), name = "Web App", type = EntityType.CONTAINER)
     private val paymentApi = Entity(id = EntityId("payment-api"), name = "Payment API", type = EntityType.CONTAINER)
 
-    private fun validRelationship() = Relationship(
-        id = RelationshipId("rel-1"),
-        sourceId = webApp.id,
-        targetId = paymentApi.id,
-    )
+    private fun validRelationship() =
+        Relationship(
+            id = RelationshipId("rel-1"),
+            sourceId = webApp.id,
+            targetId = paymentApi.id,
+        )
 
-    private fun validBoundary() = Boundary(
-        id = BoundaryId("payments-system"),
-        name = "Payments System",
-        type = BoundaryType.SYSTEM,
-        children = listOf(BoundaryChildId.OfEntity(paymentApi.id)),
-    )
+    private fun validBoundary() =
+        Boundary(
+            id = BoundaryId("payments-system"),
+            name = "Payments System",
+            type = BoundaryType.SYSTEM,
+            children = listOf(BoundaryChildId.OfEntity(paymentApi.id)),
+        )
 
     @Test
     fun `an empty diagram is valid`() {
@@ -33,11 +34,12 @@ class DiagramTest {
 
     @Test
     fun `a diagram with consistent entities, relationships, and boundaries is valid`() {
-        val diagram = Diagram(
-            entities = listOf(webApp, paymentApi),
-            relationships = listOf(validRelationship()),
-            boundaries = listOf(validBoundary()),
-        )
+        val diagram =
+            Diagram(
+                entities = listOf(webApp, paymentApi),
+                relationships = listOf(validRelationship()),
+                boundaries = listOf(validBoundary()),
+            )
 
         assertEquals(listOf(webApp, paymentApi), diagram.entities)
         assertEquals(listOf(validRelationship()), diagram.relationships)
@@ -100,12 +102,13 @@ class DiagramTest {
 
     @Test
     fun `a boundary referencing a missing nested boundary child is rejected`() {
-        val outer = Boundary(
-            id = BoundaryId("enterprise"),
-            name = "Enterprise",
-            type = BoundaryType.ENTERPRISE,
-            children = listOf(BoundaryChildId.OfBoundary(BoundaryId("nonexistent"))),
-        )
+        val outer =
+            Boundary(
+                id = BoundaryId("enterprise"),
+                name = "Enterprise",
+                type = BoundaryType.ENTERPRISE,
+                children = listOf(BoundaryChildId.OfBoundary(BoundaryId("nonexistent"))),
+            )
 
         assertThrows(IllegalArgumentException::class.java) {
             Diagram(boundaries = listOf(outer))
@@ -115,12 +118,13 @@ class DiagramTest {
     @Test
     fun `a boundary referencing an existing nested boundary is valid`() {
         val inner = Boundary(id = BoundaryId("inner"), name = "Inner", type = BoundaryType.CONTAINER)
-        val outer = Boundary(
-            id = BoundaryId("outer"),
-            name = "Outer",
-            type = BoundaryType.SYSTEM,
-            children = listOf(BoundaryChildId.OfBoundary(inner.id)),
-        )
+        val outer =
+            Boundary(
+                id = BoundaryId("outer"),
+                name = "Outer",
+                type = BoundaryType.SYSTEM,
+                children = listOf(BoundaryChildId.OfBoundary(inner.id)),
+            )
 
         val diagram = Diagram(boundaries = listOf(inner, outer))
 

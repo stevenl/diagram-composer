@@ -12,6 +12,11 @@ package dev.diagramcomposer.core.model
  * Guidelines" preference for sealed interfaces over untyped strings.
  */
 sealed interface BoundaryChildId {
-    data class OfEntity(val id: EntityId) : BoundaryChildId
-    data class OfBoundary(val id: BoundaryId) : BoundaryChildId
+    data class OfEntity(
+        val id: EntityId,
+    ) : BoundaryChildId
+
+    data class OfBoundary(
+        val id: BoundaryId,
+    ) : BoundaryChildId
 }

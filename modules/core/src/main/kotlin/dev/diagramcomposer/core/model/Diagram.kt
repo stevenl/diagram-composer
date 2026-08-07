@@ -63,10 +63,11 @@ data class Diagram(
         val boundaryIds = boundaries.map { it.id }.toSet()
         for (boundary in boundaries) {
             for (child in boundary.children) {
-                val childExists = when (child) {
-                    is BoundaryChildId.OfEntity -> child.id in entityIds
-                    is BoundaryChildId.OfBoundary -> child.id in boundaryIds
-                }
+                val childExists =
+                    when (child) {
+                        is BoundaryChildId.OfEntity -> child.id in entityIds
+                        is BoundaryChildId.OfBoundary -> child.id in boundaryIds
+                    }
                 require(childExists) {
                     "Boundary '${boundary.id}' references missing child '$child'"
                 }
@@ -111,8 +112,16 @@ data class Diagram(
     }
 
     private companion object {
-        fun requireUniqueIds(ids: List<Any>, label: String) {
-            val duplicates = ids.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
+        fun requireUniqueIds(
+            ids: List<Any>,
+            label: String,
+        ) {
+            val duplicates =
+                ids
+                    .groupingBy { it }
+                    .eachCount()
+                    .filterValues { it > 1 }
+                    .keys
             require(duplicates.isEmpty()) { "$label ids must be unique; duplicates: $duplicates" }
         }
 
