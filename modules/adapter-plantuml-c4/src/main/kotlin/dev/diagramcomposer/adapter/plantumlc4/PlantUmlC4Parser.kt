@@ -175,7 +175,6 @@ internal object PlantUmlC4Parser {
         }
         val alias = args.positional[0]
         val label = args.positional[1]
-
         // Container/ContainerDb/Component take an optional technology as their
         // 3rd positional argument, then an optional description as their 4th.
         // Person/System/*_Ext take only an optional description as their 3rd.
@@ -193,6 +192,7 @@ internal object PlantUmlC4Parser {
             description = args.named["descr"] ?: description,
             technology = args.named["techn"] ?: technology,
             tags = args.named["tags"]?.splitTags() ?: emptyList(),
+            properties = args.named.filterKeys { name -> name !in setOf("descr", "techn", "tags", "id") },
         )
     }
 
