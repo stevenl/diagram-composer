@@ -281,8 +281,15 @@ class Entity {
     technology
     tags
     properties
+    external
 }
 ```
+
+`external` marks an entity as sitting outside the system being documented
+(e.g. a PlantUML `Person_Ext`/`System_Ext`) — see §15 "Supported
+Properties". It is a property of the entity, not a separate `EntityType`
+value, since being external is orthogonal to what *kind* of thing the
+entity is.
 
 Example:
 
@@ -384,6 +391,7 @@ classDiagram
         technology
         tags
         properties
+        external
     }
 
     class Relationship {

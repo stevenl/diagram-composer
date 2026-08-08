@@ -119,6 +119,18 @@ class SourceRoundTripTest {
     }
 
     @Test
+    fun `Person_Ext and System_Ext preserve the external flag`() {
+        assertRoundTrips(
+            """
+            Person_Ext(auditor, "External Auditor")
+            System_Ext(email_system, "E-Mail System")
+            Person(customer, "Customer")
+            System(banking, "Internet Banking System")
+            """.trimIndent(),
+        )
+    }
+
+    @Test
     fun `a representative full diagram round-trips`() {
         assertRoundTrips(
             """

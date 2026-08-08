@@ -190,7 +190,8 @@ data class Entity(
     val description: String? = null,
     val technology: String? = null,
     val tags: List<String> = emptyList(),
-    val properties: Map<String, String> = emptyMap()
+    val properties: Map<String, String> = emptyMap(),
+    val external: Boolean = false, // e.g. PlantUML Person_Ext/System_Ext; architecture.md §4.2
 )
 ```
 

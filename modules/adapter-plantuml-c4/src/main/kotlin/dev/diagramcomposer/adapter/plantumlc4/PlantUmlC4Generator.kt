@@ -107,7 +107,7 @@ internal object PlantUmlC4Generator {
         entity: Entity,
         indent: Int,
     ): String {
-        val macroName = ENTITY_TYPE_TO_MACRO.getValue(entity.type)
+        val macroName = macroNameFor(entity)
         val args = mutableListOf(entity.id.toString(), quote(entity.name))
         entity.technology?.let { args += namedArg("techn", it) }
         entity.description?.let { args += namedArg("descr", it) }
@@ -164,6 +164,20 @@ internal object PlantUmlC4Generator {
         return "$macroName(${args.joinToString(", ")})"
     }
 
+    // Person/System have an `_Ext` macro variant for entity.external = true
+    // (docs/adapters.md §15 "Supported Entities"); Container/ContainerDb/
+    // Component don't (no Container_Ext etc. in the supported macro set), so
+    // external is silently not representable for those types via this
+    // adapter today — a documented MVP gap, not a bug, since the parser can
+    // never produce that combination (EXTERNAL_ENTITY_MACROS in
+    // PlantUmlC4Parser only sets external=true for Person_Ext/System_Ext).
+    private fun macroNameFor(entity: Entity): String {
+        if (entity.external) {
+            EXTERNAL_ENTITY_TYPE_TO_MACRO[entity.type]?.let { return it }
+        }
+        return ENTITY_TYPE_TO_MACRO.getValue(entity.type)
+    }
+
     private fun namedArg(
         name: String,
         value: String,
@@ -183,6 +197,12 @@ internal object PlantUmlC4Generator {
             EntityType.CONTAINER to "Container",
             EntityType.DATABASE to "ContainerDb",
             EntityType.COMPONENT to "Component",
+        )
+
+    private val EXTERNAL_ENTITY_TYPE_TO_MACRO: Map<EntityType, String> =
+        mapOf(
+            EntityType.PERSON to "Person_Ext",
+            EntityType.SYSTEM to "System_Ext",
         )
 
     private val BOUNDARY_TYPE_TO_MACRO: Map<BoundaryType, String> =

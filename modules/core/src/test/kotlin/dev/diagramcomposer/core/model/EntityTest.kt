@@ -36,6 +36,15 @@ class EntityTest {
         assertEquals(null, minimal.technology)
         assertEquals(emptyList<String>(), minimal.tags)
         assertEquals(emptyMap<String, String>(), minimal.properties)
+        assertEquals(false, minimal.external)
+    }
+
+    @Test
+    fun `external can be set independently of type`() {
+        val entity = sampleEntity().copy(external = true)
+
+        assertEquals(true, entity.external)
+        assertEquals(sampleEntity().type, entity.type)
     }
 
     @Test

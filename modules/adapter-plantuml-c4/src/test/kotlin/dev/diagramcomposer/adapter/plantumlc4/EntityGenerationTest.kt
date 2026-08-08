@@ -52,6 +52,43 @@ class EntityGenerationTest {
     }
 
     @Test
+    fun `an external Person renders with the Person_Ext macro`() {
+        val source =
+            generate(
+                Entity(id = EntityId("auditor"), name = "External Auditor", type = EntityType.PERSON, external = true)
+            )
+
+        assertTrue(source.contains("""Person_Ext(auditor, "External Auditor")"""))
+    }
+
+    @Test
+    fun `an external System renders with the System_Ext macro`() {
+        val source =
+            generate(
+                Entity(id = EntityId("email"), name = "E-Mail System", type = EntityType.SYSTEM, external = true),
+            )
+
+        assertTrue(source.contains("""System_Ext(email, "E-Mail System")"""))
+    }
+
+    @Test
+    fun `an external Container falls back to the plain Container macro`() {
+        // No Container_Ext in the supported macro set (docs/adapters.md §15) —
+        // documented MVP gap, see PlantUmlC4Generator.macroNameFor.
+        val source =
+            generate(
+                Entity(
+                    id = EntityId("web_app"),
+                    name = "Web Application",
+                    type = EntityType.CONTAINER,
+                    external = true
+                ),
+            )
+
+        assertTrue(source.contains("""Container(web_app, "Web Application")"""))
+    }
+
+    @Test
     fun `multiple top-level entities are each rendered on their own line`() {
         val source =
             generate(

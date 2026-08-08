@@ -203,6 +203,7 @@ internal object PlantUmlC4Parser {
             technology = args.named["techn"] ?: technology,
             tags = args.named["tags"]?.splitTags() ?: emptyList(),
             properties = args.named.filterKeys { name -> name !in setOf("descr", "techn", "tags", "id") },
+            external = macroName in EXTERNAL_ENTITY_MACROS,
         )
     }
 
@@ -288,6 +289,12 @@ internal object PlantUmlC4Parser {
         )
 
     private val TECHNOLOGY_BEARING_MACROS = setOf("Container", "ContainerDb", "Component")
+
+    // Macros that set Entity.external = true (docs/adapters.md §15 "Supported
+    // Properties" — "External/Internal"). Both map to the same EntityType as
+    // their non-Ext counterpart in ENTITY_MACROS above; external-ness is a
+    // property of the entity, not a different kind of entity.
+    private val EXTERNAL_ENTITY_MACROS = setOf("Person_Ext", "System_Ext")
 
     private val BOUNDARY_MACROS: Map<String, BoundaryType> =
         mapOf(
