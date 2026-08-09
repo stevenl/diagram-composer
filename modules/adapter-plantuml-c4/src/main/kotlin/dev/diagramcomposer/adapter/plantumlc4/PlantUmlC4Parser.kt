@@ -53,126 +53,162 @@ import dev.diagramcomposer.core.model.RelationshipType
  */
 internal object PlantUmlC4Parser {
     fun parse(source: String): ParseResult {
-        val errors = mutableListOf<ParseError>()
-        val entities = mutableListOf<Entity>()
-        val relationships = mutableListOf<Relationship>()
-        val completedBoundaries = mutableListOf<Boundary>()
-        val rootChildren = mutableListOf<BoundaryChildId>()
-        val boundaryStack = ArrayDeque<OpenBoundary>()
-        var relationshipCounter = 0
+        val parser = DiagramParser()
+        source.lineSequence().forEachIndexed { index, rawLine -> parser.parseLine(rawLine, index + 1) }
+        return parser.buildResult()
+    }
+
+    /**
+     * Line-by-line parser state for a single [parse] call, with the
+     * line-handling logic as methods on it instead of free functions in
+     * [PlantUmlC4Parser] — a single `parse()` body originally held all of
+     * this (five closed-over `var`s/lists and one large branching function),
+     * which tripped detekt's `LongMethod`/`CyclomaticComplexMethod`; making
+     * the free functions that first split it up into methods on their own
+     * class instead keeps [PlantUmlC4Parser] itself under detekt's
+     * `TooManyFunctions` threshold, since each class/object is counted
+     * separately.
+     */
+    private class DiagramParser {
+        private val errors = mutableListOf<ParseError>()
+        private val entities = mutableListOf<Entity>()
+        private val relationships = mutableListOf<Relationship>()
+        private val completedBoundaries = mutableListOf<Boundary>()
+        private val rootChildren = mutableListOf<BoundaryChildId>()
+        private val boundaryStack = ArrayDeque<OpenBoundary>()
+        private var relationshipCounter = 0
+
+        fun parseLine(
+            rawLine: String,
+            lineNumber: Int,
+        ) {
+            val line = rawLine.trim()
+            when {
+                line.isEmpty() || isIgnorableLine(line) -> Unit
+                line == "}" -> closeBoundary(lineNumber)
+                else -> parseMacroLine(line, lineNumber)
+            }
+        }
+
+        fun buildResult(): ParseResult {
+            for (open in boundaryStack) {
+                errors += ParseError("boundary '${open.id}' was never closed with '}'")
+            }
+
+            if (errors.isNotEmpty()) {
+                return ParseResult.Failure(errors)
+            }
+
+            return try {
+                ParseResult.Success(
+                    Diagram(
+                        entities = entities,
+                        relationships = relationships,
+                        boundaries = completedBoundaries,
+                        rootChildren = rootChildren,
+                    ),
+                )
+            } catch (e: IllegalArgumentException) {
+                ParseResult.Failure(listOf(ParseError(e.message ?: "invalid diagram")))
+            }
+        }
 
         // Always returns a sink to record declaration order into: the innermost
         // open boundary's children, or rootChildren at the top level. This is
         // what lets top-level entities and boundaries round-trip in their
         // original relative order (see Diagram.rootChildren).
-        fun currentChildren(): MutableList<BoundaryChildId> = boundaryStack.lastOrNull()?.children ?: rootChildren
+        private fun currentChildren(): MutableList<BoundaryChildId> =
+            boundaryStack.lastOrNull()?.children ?: rootChildren
 
-        source.lineSequence().forEachIndexed { index, rawLine ->
-            val lineNumber = index + 1
-            val line = rawLine.trim()
-
-            if (line.isEmpty() || isIgnorableLine(line)) return@forEachIndexed
-
-            if (line == "}") {
-                val closed = boundaryStack.removeLastOrNull()
-                if (closed == null) {
-                    errors += ParseError("unexpected '}' with no open boundary", line = lineNumber)
-                } else {
-                    val boundary =
-                        Boundary(
-                            id = BoundaryId(closed.id),
-                            name = closed.name,
-                            type = closed.type,
-                            children = closed.children,
-                        )
-                    completedBoundaries += boundary
-                    currentChildren().add(BoundaryChildId.OfBoundary(boundary.id))
-                }
-                return@forEachIndexed
+        private fun closeBoundary(lineNumber: Int) {
+            val closed = boundaryStack.removeLastOrNull()
+            if (closed == null) {
+                errors += ParseError("unexpected '}' with no open boundary", line = lineNumber)
+                return
             }
+            val boundary =
+                Boundary(id = BoundaryId(closed.id), name = closed.name, type = closed.type, children = closed.children)
+            completedBoundaries += boundary
+            currentChildren().add(BoundaryChildId.OfBoundary(boundary.id))
+        }
 
+        private fun parseMacroLine(
+            line: String,
+            lineNumber: Int,
+        ) {
             val call = MACRO_CALL.matchEntire(line)
             if (call == null) {
                 errors += ParseError("unrecognized syntax: '$line'", line = lineNumber)
-                return@forEachIndexed
+                return
             }
 
             val macroName = call.groupValues[1]
             val argsSource = call.groupValues[2]
-            val opensBoundary = call.groupValues[3] == "{"
+            val opensBoundary = call.groupValues[OPENS_BOUNDARY_GROUP_INDEX] == "{"
             val args = PlantUmlArgs.parse(argsSource)
 
             try {
                 when {
-                    macroName in ENTITY_MACROS -> {
-                        if (opensBoundary) {
-                            errors += ParseError("'$macroName' cannot open a block with '{'", line = lineNumber)
-                            return@forEachIndexed
-                        }
-                        val entity = parseEntity(macroName, args)
-                        entities += entity
-                        currentChildren().add(BoundaryChildId.OfEntity(entity.id))
-                    }
-
-                    macroName in BOUNDARY_MACROS -> {
-                        if (!opensBoundary) {
-                            errors +=
-                                ParseError(
-                                    "'$macroName' must open a block with a trailing '{'",
-                                    line = lineNumber,
-                                )
-                            return@forEachIndexed
-                        }
-                        require(args.positional.size >= 2) {
-                            "'$macroName' requires an alias and a label, got ${args.positional}"
-                        }
-                        boundaryStack.addLast(
-                            OpenBoundary(
-                                id = args.positional[0],
-                                name = args.positional[1],
-                                type = BOUNDARY_MACROS.getValue(macroName),
-                            ),
-                        )
-                    }
-
-                    macroName in RELATIONSHIP_MACROS -> {
-                        if (opensBoundary) {
-                            errors += ParseError("'$macroName' cannot open a block with '{'", line = lineNumber)
-                            return@forEachIndexed
-                        }
-                        relationshipCounter++
-                        val relationship = parseRelationship(macroName, args, relationshipCounter)
-                        relationships += relationship
-                    }
-
-                    else -> {
-                        errors += ParseError("unrecognized macro '$macroName'", line = lineNumber)
-                    }
+                    macroName in ENTITY_MACROS -> handleEntityMacro(macroName, args, opensBoundary, lineNumber)
+                    macroName in BOUNDARY_MACROS -> handleBoundaryMacro(macroName, args, opensBoundary, lineNumber)
+                    macroName in RELATIONSHIP_MACROS ->
+                        handleRelationshipMacro(macroName, args, opensBoundary, lineNumber)
+                    else -> errors += ParseError("unrecognized macro '$macroName'", line = lineNumber)
                 }
             } catch (e: IllegalArgumentException) {
                 errors += ParseError(e.message ?: "invalid syntax on line: '$line'", line = lineNumber)
             }
         }
 
-        for (open in boundaryStack) {
-            errors += ParseError("boundary '${open.id}' was never closed with '}'")
+        private fun handleEntityMacro(
+            macroName: String,
+            args: PlantUmlArgs,
+            opensBoundary: Boolean,
+            lineNumber: Int,
+        ) {
+            if (opensBoundary) {
+                errors += ParseError("'$macroName' cannot open a block with '{'", line = lineNumber)
+                return
+            }
+            val entity = parseEntity(macroName, args)
+            entities += entity
+            currentChildren().add(BoundaryChildId.OfEntity(entity.id))
         }
 
-        if (errors.isNotEmpty()) {
-            return ParseResult.Failure(errors)
-        }
-
-        return try {
-            ParseResult.Success(
-                Diagram(
-                    entities = entities,
-                    relationships = relationships,
-                    boundaries = completedBoundaries,
-                    rootChildren = rootChildren,
+        private fun handleBoundaryMacro(
+            macroName: String,
+            args: PlantUmlArgs,
+            opensBoundary: Boolean,
+            lineNumber: Int,
+        ) {
+            if (!opensBoundary) {
+                errors += ParseError("'$macroName' must open a block with a trailing '{'", line = lineNumber)
+                return
+            }
+            require(args.positional.size >= 2) {
+                "'$macroName' requires an alias and a label, got ${args.positional}"
+            }
+            boundaryStack.addLast(
+                OpenBoundary(
+                    id = args.positional[0],
+                    name = args.positional[1],
+                    type = BOUNDARY_MACROS.getValue(macroName),
                 ),
             )
-        } catch (e: IllegalArgumentException) {
-            ParseResult.Failure(listOf(ParseError(e.message ?: "invalid diagram")))
+        }
+
+        private fun handleRelationshipMacro(
+            macroName: String,
+            args: PlantUmlArgs,
+            opensBoundary: Boolean,
+            lineNumber: Int,
+        ) {
+            if (opensBoundary) {
+                errors += ParseError("'$macroName' cannot open a block with '{'", line = lineNumber)
+                return
+            }
+            relationshipCounter++
+            relationships += parseRelationship(macroName, args, relationshipCounter)
         }
     }
 
@@ -190,7 +226,7 @@ internal object PlantUmlC4Parser {
         // Person/System/*_Ext take only an optional description as their 3rd.
         val (technology, description) =
             if (macroName in TECHNOLOGY_BEARING_MACROS) {
-                args.positional.getOrNull(2) to args.positional.getOrNull(3)
+                args.positional.getOrNull(2) to args.positional.getOrNull(FOURTH_POSITIONAL_ARG_INDEX)
             } else {
                 null to args.positional.getOrNull(2)
             }
@@ -218,7 +254,7 @@ internal object PlantUmlC4Parser {
         val sourceId = args.positional[0]
         val targetId = args.positional[1]
         val description = args.named["descr"] ?: args.positional.getOrNull(2)
-        val technology = args.named["techn"] ?: args.positional.getOrNull(3)
+        val technology = args.named["techn"] ?: args.positional.getOrNull(FOURTH_POSITIONAL_ARG_INDEX)
         val direction = RELATIONSHIP_MACROS.getValue(macroName)
 
         val properties =
@@ -241,9 +277,7 @@ internal object PlantUmlC4Parser {
             description = description,
             technology = technology,
             type =
-                if (macroName in
-                    BIDIRECTIONAL_RELATIONSHIP_MACROS
-                ) {
+                if (macroName in BIDIRECTIONAL_RELATIONSHIP_MACROS) {
                     RelationshipType.BIDIRECTIONAL
                 } else {
                     RelationshipType.DEFAULT
@@ -252,16 +286,18 @@ internal object PlantUmlC4Parser {
         )
     }
 
-    private fun isIgnorableLine(line: String): Boolean {
-        if (line.startsWith("'")) return true
-        if (line.startsWith("@")) return true
-        if (line.startsWith("!")) return true
-        if (line.startsWith("title", ignoreCase = true) &&
-            (line.length == 5 || line[5].isWhitespace())
-        ) {
-            return true
-        }
+    private fun isIgnorableLine(line: String): Boolean = isIgnorableKeywordLine(line) || isIgnorableMacroCall(line)
 
+    private fun isIgnorableKeywordLine(line: String): Boolean =
+        line.startsWith("'") ||
+            line.startsWith("@") ||
+            line.startsWith("!") ||
+            (
+                line.startsWith(TITLE_KEYWORD, ignoreCase = true) &&
+                    (line.length == TITLE_KEYWORD.length || line[TITLE_KEYWORD.length].isWhitespace())
+            )
+
+    private fun isIgnorableMacroCall(line: String): Boolean {
         val call = MACRO_CALL.matchEntire(line) ?: return false
         val macroName = call.groupValues[1]
         return IGNORABLE_MACRO_PREFIXES.any { macroName.startsWith(it) }
@@ -276,6 +312,15 @@ internal object PlantUmlC4Parser {
 
     // Matches a macro call: `Name(args)` or `Name(args) {` (trailing block opener).
     private val MACRO_CALL = Regex("^([A-Za-z_][A-Za-z0-9_]*)\\s*\\((.*)\\)\\s*(\\{)?\\s*$")
+
+    // MACRO_CALL's 3rd capture group — the optional trailing '{' that opens a boundary block.
+    private const val OPENS_BOUNDARY_GROUP_INDEX = 3
+
+    // A macro's optional 4th positional argument (0-indexed 3): Container's
+    // description when a technology is also present, or Rel's technology.
+    private const val FOURTH_POSITIONAL_ARG_INDEX = 3
+
+    private const val TITLE_KEYWORD = "title"
 
     private val ENTITY_MACROS: Map<String, EntityType> =
         mapOf(
