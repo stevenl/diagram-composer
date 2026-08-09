@@ -10,7 +10,7 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":modules:core"))
+    api(project(":modules:core"))
 
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
