@@ -163,6 +163,34 @@ class DiagramRoundTripTest {
     }
 
     @Test
+    fun `a top-level entity declared after a boundary in rootChildren round-trips`() {
+        val customer = Entity(id = EntityId("customer"), name = "Customer", type = EntityType.PERSON)
+        val webApp = Entity(id = EntityId("web_app"), name = "Web Application", type = EntityType.CONTAINER)
+        val emailSystem =
+            Entity(id = EntityId("email_system"), name = "E-Mail System", type = EntityType.SYSTEM, external = true)
+        val boundary =
+            Boundary(
+                id = BoundaryId("banking"),
+                name = "Internet Banking System",
+                type = BoundaryType.SYSTEM,
+                children = listOf(BoundaryChildId.OfEntity(webApp.id)),
+            )
+
+        assertRoundTrips(
+            Diagram(
+                entities = listOf(customer, webApp, emailSystem),
+                boundaries = listOf(boundary),
+                rootChildren =
+                    listOf(
+                        BoundaryChildId.OfEntity(customer.id),
+                        BoundaryChildId.OfBoundary(boundary.id),
+                        BoundaryChildId.OfEntity(emailSystem.id),
+                    ),
+            ),
+        )
+    }
+
+    @Test
     fun `an empty diagram round-trips`() {
         assertRoundTrips(Diagram())
     }

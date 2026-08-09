@@ -170,7 +170,8 @@ Example:
 data class Diagram(
     val entities: List<Entity>,
     val relationships: List<Relationship>,
-    val boundaries: List<Boundary>
+    val boundaries: List<Boundary>,
+    val rootChildren: List<BoundaryChildId>, // top-level declaration order; see architecture.md §4.1
 )
 ```
 

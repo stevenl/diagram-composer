@@ -57,10 +57,15 @@ internal object PlantUmlC4Parser {
         val entities = mutableListOf<Entity>()
         val relationships = mutableListOf<Relationship>()
         val completedBoundaries = mutableListOf<Boundary>()
+        val rootChildren = mutableListOf<BoundaryChildId>()
         val boundaryStack = ArrayDeque<OpenBoundary>()
         var relationshipCounter = 0
 
-        fun currentChildren(): MutableList<BoundaryChildId>? = boundaryStack.lastOrNull()?.children
+        // Always returns a sink to record declaration order into: the innermost
+        // open boundary's children, or rootChildren at the top level. This is
+        // what lets top-level entities and boundaries round-trip in their
+        // original relative order (see Diagram.rootChildren).
+        fun currentChildren(): MutableList<BoundaryChildId> = boundaryStack.lastOrNull()?.children ?: rootChildren
 
         source.lineSequence().forEachIndexed { index, rawLine ->
             val lineNumber = index + 1
@@ -81,7 +86,7 @@ internal object PlantUmlC4Parser {
                             children = closed.children,
                         )
                     completedBoundaries += boundary
-                    currentChildren()?.add(BoundaryChildId.OfBoundary(boundary.id))
+                    currentChildren().add(BoundaryChildId.OfBoundary(boundary.id))
                 }
                 return@forEachIndexed
             }
@@ -106,7 +111,7 @@ internal object PlantUmlC4Parser {
                         }
                         val entity = parseEntity(macroName, args)
                         entities += entity
-                        currentChildren()?.add(BoundaryChildId.OfEntity(entity.id))
+                        currentChildren().add(BoundaryChildId.OfEntity(entity.id))
                     }
 
                     macroName in BOUNDARY_MACROS -> {
@@ -159,7 +164,12 @@ internal object PlantUmlC4Parser {
 
         return try {
             ParseResult.Success(
-                Diagram(entities = entities, relationships = relationships, boundaries = completedBoundaries),
+                Diagram(
+                    entities = entities,
+                    relationships = relationships,
+                    boundaries = completedBoundaries,
+                    rootChildren = rootChildren,
+                ),
             )
         } catch (e: IllegalArgumentException) {
             ParseResult.Failure(listOf(ParseError(e.message ?: "invalid diagram")))

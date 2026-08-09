@@ -135,4 +135,66 @@ class DiagramTest {
             diagram.copy(entities = listOf(webApp)) // drops paymentApi, orphaning the relationship
         }
     }
+
+    @Test
+    fun `rootChildren defaults to entities then boundaries not claimed by a boundary`() {
+        val diagram =
+            Diagram(
+                entities = listOf(webApp, paymentApi),
+                boundaries = listOf(validBoundary()), // claims paymentApi
+            )
+
+        assertEquals(
+            listOf(BoundaryChildId.OfEntity(webApp.id), BoundaryChildId.OfBoundary(validBoundary().id)),
+            diagram.rootChildren,
+        )
+    }
+
+    @Test
+    fun `an explicit rootChildren interleaving entities and boundaries is honoured`() {
+        val boundary = validBoundary() // claims paymentApi as a child
+        val interleaved =
+            listOf(
+                BoundaryChildId.OfEntity(webApp.id),
+                BoundaryChildId.OfBoundary(boundary.id),
+            )
+
+        val diagram =
+            Diagram(
+                entities = listOf(webApp, paymentApi),
+                boundaries = listOf(boundary),
+                rootChildren = interleaved,
+            )
+
+        assertEquals(interleaved, diagram.rootChildren)
+    }
+
+    @Test
+    fun `rootChildren referencing a missing entity is rejected`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            Diagram(entities = emptyList(), rootChildren = listOf(BoundaryChildId.OfEntity(webApp.id)))
+        }
+    }
+
+    @Test
+    fun `an entity missing from both rootChildren and every boundary's children is rejected`() {
+        // webApp exists in `entities` but isn't referenced by rootChildren or any boundary,
+        // so it would silently disappear from generated output.
+        assertThrows(IllegalArgumentException::class.java) {
+            Diagram(entities = listOf(webApp), rootChildren = emptyList())
+        }
+    }
+
+    @Test
+    fun `an entity appearing in rootChildren and also as a boundary child is rejected`() {
+        // paymentApi is already a child of validBoundary(); also listing it in rootChildren
+        // would render it twice.
+        assertThrows(IllegalArgumentException::class.java) {
+            Diagram(
+                entities = listOf(paymentApi),
+                boundaries = listOf(validBoundary()),
+                rootChildren = listOf(BoundaryChildId.OfEntity(paymentApi.id)),
+            )
+        }
+    }
 }

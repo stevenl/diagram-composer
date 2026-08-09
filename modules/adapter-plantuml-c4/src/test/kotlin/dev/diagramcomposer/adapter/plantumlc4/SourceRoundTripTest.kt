@@ -100,6 +100,25 @@ class SourceRoundTripTest {
     }
 
     @Test
+    fun `a top-level entity declared after a boundary round-trips`() {
+        // Regression test: the generator used to emit all top-level entities
+        // before all top-level boundaries, regardless of source order. That
+        // reorders `banking_web` ahead of the boundary on reparse, so
+        // Diagram.entities (a plain, order-sensitive List) would no longer
+        // equal the original — even though nothing about the diagram's
+        // *content* changed. See Diagram.rootChildren.
+        assertRoundTrips(
+            """
+            Person(customer, "Customer")
+            System_Boundary(banking, "Internet Banking System") {
+                Container(web_app, "Web Application")
+            }
+            System_Ext(banking_web, "Some External System")
+            """.trimIndent(),
+        )
+    }
+
+    @Test
     fun `a representative full diagram round-trips`() {
         assertRoundTrips(
             """

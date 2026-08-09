@@ -21,7 +21,7 @@ import dev.diagramcomposer.core.model.RelationshipType
  * @startuml
  * !include <C4/C4_Container>
  *
- * <top-level entities and boundaries, entities first>
+ * <top-level entities and boundaries, in Diagram.rootChildren order>
  *
  * <relationships>
  * @enduml
@@ -29,12 +29,14 @@ import dev.diagramcomposer.core.model.RelationshipType
  *
  * Entities/boundaries that are a child of some [Boundary] (per
  * [Boundary.children]) are only emitted once, nested inside that boundary's
- * `{ }` block (recursively, for nested boundaries); everything else is
- * emitted at the top level. Ordering otherwise follows [Diagram.entities] /
- * [Diagram.boundaries] / [Diagram.relationships] list order — deterministic,
- * but not necessarily the order of any source this diagram was originally
+ * `{ }` block (recursively, for nested boundaries); everything else is a
+ * top-level element, emitted in [Diagram.rootChildren] order. Relationships
+ * otherwise follow [Diagram.relationships] list order — deterministic, but
+ * not necessarily the order of any source this diagram was originally
  * parsed from (docs/adapters.md §10 only requires *semantic* round-trip
- * stability, not byte-identical output).
+ * stability, not byte-identical output). Top-level entity/boundary order
+ * *is* preserved exactly, via [Diagram.rootChildren] — see its doc comment
+ * for why that one is load-bearing rather than cosmetic.
  *
  * ## Argument style
  *
@@ -67,30 +69,23 @@ internal object PlantUmlC4Generator {
         val entitiesById = diagram.entities.associateBy { it.id }
         val boundariesById = diagram.boundaries.associateBy { it.id }
 
-        val childEntityIds =
-            diagram.boundaries
-                .asSequence()
-                .flatMap { it.children }
-                .filterIsInstance<BoundaryChildId.OfEntity>()
-                .map { it.id }
-                .toSet()
-        val childBoundaryIds =
-            diagram.boundaries
-                .asSequence()
-                .flatMap { it.children }
-                .filterIsInstance<BoundaryChildId.OfBoundary>()
-                .map { it.id }
-                .toSet()
-
-        val topLevelEntities = diagram.entities.filter { it.id !in childEntityIds }
-        val topLevelBoundaries = diagram.boundaries.filter { it.id !in childBoundaryIds }
-
         val body = StringBuilder()
-        for (entity in topLevelEntities) {
-            body.appendLine(renderEntity(entity, indent = 0))
-        }
-        for (boundary in topLevelBoundaries) {
-            renderBoundary(boundary, boundariesById, entitiesById, indent = 0, out = body)
+        for (child in diagram.rootChildren) {
+            when (child) {
+                is BoundaryChildId.OfEntity -> {
+                    body.appendLine(renderEntity(entitiesById.getValue(child.id), indent = 0))
+                }
+
+                is BoundaryChildId.OfBoundary -> {
+                    renderBoundary(
+                        boundariesById.getValue(child.id),
+                        boundariesById,
+                        entitiesById,
+                        indent = 0,
+                        out = body,
+                    )
+                }
+            }
         }
 
         return buildString {
