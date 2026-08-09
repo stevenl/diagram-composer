@@ -170,7 +170,8 @@ Example:
 data class Diagram(
     val entities: List<Entity>,
     val relationships: List<Relationship>,
-    val boundaries: List<Boundary>
+    val boundaries: List<Boundary>,
+    val rootChildren: List<BoundaryChildId>, // top-level declaration order; see architecture.md §4.1
 )
 ```
 
@@ -189,7 +190,8 @@ data class Entity(
     val description: String? = null,
     val technology: String? = null,
     val tags: List<String> = emptyList(),
-    val properties: Map<String, String> = emptyMap()
+    val properties: Map<String, String> = emptyMap(),
+    val external: Boolean = false, // e.g. PlantUML Person_Ext/System_Ext; architecture.md §4.2
 )
 ```
 

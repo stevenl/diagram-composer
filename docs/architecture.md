@@ -241,8 +241,18 @@ Diagram
 
     Boundaries
 
+    Root children (top-level declaration order)
+
     Styles
 ```
+
+`Root children` records the declaration order of the entities and
+boundaries that sit at the top level (i.e. that aren't a child of any
+`Boundary`), the same way a `Boundary`'s own `children` records order for
+its nested content (§4.4). Without it, regenerating source from the model
+would have no way to know whether a top-level entity was originally
+declared before or after a top-level boundary, and re-parsing that
+regenerated source would silently reorder it.
 
 ---
 
@@ -271,8 +281,15 @@ class Entity {
     technology
     tags
     properties
+    external
 }
 ```
+
+`external` marks an entity as sitting outside the system being documented
+(e.g. a PlantUML `Person_Ext`/`System_Ext`) — see §15 "Supported
+Properties". It is a property of the entity, not a separate `EntityType`
+value, since being external is orthogonal to what *kind* of thing the
+entity is.
 
 Example:
 
@@ -363,6 +380,7 @@ classDiagram
         entities
         relationships
         boundaries
+        rootChildren
     }
 
     class Entity {
@@ -373,6 +391,7 @@ classDiagram
         technology
         tags
         properties
+        external
     }
 
     class Relationship {
@@ -440,6 +459,7 @@ classDiagram
     Relationship "0..*" --> "1" EntityId : targetId
 
     Boundary "1" *-- "0..*" BoundaryChildId : children
+    Diagram "1" *-- "0..*" BoundaryChildId : rootChildren
     BoundaryChildId <|-- OfEntity
     BoundaryChildId <|-- OfBoundary
     OfEntity --> EntityId
@@ -450,7 +470,7 @@ classDiagram
     Boundary --> BoundaryType : type
 ```
 
-Note that `Relationship` and `Boundary` only ever hold *ids*, never direct references to `Entity`/`Boundary` instances — this is what keeps them free-standing value objects rather than requiring a live `Diagram` to construct. `Diagram` itself is responsible for rejecting a relationship or boundary whose ids don't resolve within it (a "dangling reference"), rather than that check living in `Relationship` or `Boundary`.
+Note that `Relationship` and `Boundary` only ever hold *ids*, never direct references to `Entity`/`Boundary` instances — this is what keeps them free-standing value objects rather than requiring a live `Diagram` to construct. `Diagram` itself is responsible for rejecting a relationship or boundary whose ids don't resolve within it (a "dangling reference"), rather than that check living in `Relationship` or `Boundary`. The same applies to `Diagram.rootChildren`; `Diagram` additionally requires every entity and boundary to appear *exactly once* across `rootChildren` and every `Boundary.children` combined, so nothing can be silently omitted from — or duplicated in — generated output.
 
 ---
 

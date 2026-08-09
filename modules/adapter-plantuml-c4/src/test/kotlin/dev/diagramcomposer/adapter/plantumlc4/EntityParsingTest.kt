@@ -29,17 +29,20 @@ class EntityParsingTest {
         assertEquals("Customer", entity.name)
         assertEquals(EntityType.PERSON, entity.type)
         assertEquals("A retail bank customer.", entity.description)
+        assertEquals(false, entity.external)
     }
 
     @Test
-    fun `Person_Ext also maps to PERSON`() {
+    fun `Person_Ext maps to PERSON with external set`() {
         val diagram = parseSuccessfully("""Person_Ext(auditor, "External Auditor")""")
 
-        assertEquals(EntityType.PERSON, diagram.entities.single().type)
+        val entity = diagram.entities.single()
+        assertEquals(EntityType.PERSON, entity.type)
+        assertEquals(true, entity.external)
     }
 
     @Test
-    fun `System and System_Ext map to SYSTEM`() {
+    fun `System and System_Ext map to SYSTEM, only System_Ext sets external`() {
         val diagram =
             parseSuccessfully(
                 """
@@ -53,6 +56,8 @@ class EntityParsingTest {
             diagram.entities.map { it.type },
         )
         assertEquals("Lets customers view accounts.", diagram.entities[0].description)
+        assertEquals(false, diagram.entities[0].external)
+        assertEquals(true, diagram.entities[1].external)
     }
 
     @Test

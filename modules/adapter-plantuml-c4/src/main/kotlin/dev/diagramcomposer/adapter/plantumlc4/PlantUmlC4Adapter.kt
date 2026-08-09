@@ -9,9 +9,8 @@ import dev.diagramcomposer.core.model.Diagram
  * [DiagramAdapter] implementation for PlantUML C4 (docs/adapters.md §15) —
  * the project's first concrete language adapter.
  *
- * Parsing is implemented as of Milestone 3 ([PlantUmlC4Parser]). Generation
- * is Milestone 4 scope; [generate] throws [NotImplementedError] until then,
- * matching the plan in `docs/implementation-plan.md` Milestone 3 task 1.
+ * Parsing ([PlantUmlC4Parser], Milestone 3) and generation
+ * ([PlantUmlC4Generator], Milestone 4) are both implemented.
  */
 class PlantUmlC4Adapter : DiagramAdapter {
     override val metadata =
@@ -23,5 +22,5 @@ class PlantUmlC4Adapter : DiagramAdapter {
 
     override fun parse(source: String): ParseResult = PlantUmlC4Parser.parse(source)
 
-    override fun generate(diagram: Diagram): String = throw NotImplementedError("PlantUmlC4Adapter.generate is implemented in Milestone 4")
+    override fun generate(diagram: Diagram): String = PlantUmlC4Generator.generate(diagram)
 }

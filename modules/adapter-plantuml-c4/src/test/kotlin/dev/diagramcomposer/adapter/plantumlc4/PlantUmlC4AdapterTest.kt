@@ -1,8 +1,9 @@
 package dev.diagramcomposer.adapter.plantumlc4
 
+import dev.diagramcomposer.adapterapi.ParseResult
 import dev.diagramcomposer.core.model.Diagram
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class PlantUmlC4AdapterTest {
@@ -16,9 +17,11 @@ class PlantUmlC4AdapterTest {
     }
 
     @Test
-    fun `generate is not yet implemented (Milestone 4)`() {
-        assertThrows(NotImplementedError::class.java) {
-            adapter.generate(Diagram())
-        }
+    fun `generating an empty diagram produces source that reparses to an empty diagram`() {
+        val source = adapter.generate(Diagram())
+
+        val result = adapter.parse(source)
+        assertTrue(result is ParseResult.Success)
+        assertEquals(Diagram(), (result as ParseResult.Success).diagram)
     }
 }

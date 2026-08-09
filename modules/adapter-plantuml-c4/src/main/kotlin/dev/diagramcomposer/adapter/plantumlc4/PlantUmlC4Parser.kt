@@ -57,10 +57,15 @@ internal object PlantUmlC4Parser {
         val entities = mutableListOf<Entity>()
         val relationships = mutableListOf<Relationship>()
         val completedBoundaries = mutableListOf<Boundary>()
+        val rootChildren = mutableListOf<BoundaryChildId>()
         val boundaryStack = ArrayDeque<OpenBoundary>()
         var relationshipCounter = 0
 
-        fun currentChildren(): MutableList<BoundaryChildId>? = boundaryStack.lastOrNull()?.children
+        // Always returns a sink to record declaration order into: the innermost
+        // open boundary's children, or rootChildren at the top level. This is
+        // what lets top-level entities and boundaries round-trip in their
+        // original relative order (see Diagram.rootChildren).
+        fun currentChildren(): MutableList<BoundaryChildId> = boundaryStack.lastOrNull()?.children ?: rootChildren
 
         source.lineSequence().forEachIndexed { index, rawLine ->
             val lineNumber = index + 1
@@ -81,7 +86,7 @@ internal object PlantUmlC4Parser {
                             children = closed.children,
                         )
                     completedBoundaries += boundary
-                    currentChildren()?.add(BoundaryChildId.OfBoundary(boundary.id))
+                    currentChildren().add(BoundaryChildId.OfBoundary(boundary.id))
                 }
                 return@forEachIndexed
             }
@@ -106,7 +111,7 @@ internal object PlantUmlC4Parser {
                         }
                         val entity = parseEntity(macroName, args)
                         entities += entity
-                        currentChildren()?.add(BoundaryChildId.OfEntity(entity.id))
+                        currentChildren().add(BoundaryChildId.OfEntity(entity.id))
                     }
 
                     macroName in BOUNDARY_MACROS -> {
@@ -159,7 +164,12 @@ internal object PlantUmlC4Parser {
 
         return try {
             ParseResult.Success(
-                Diagram(entities = entities, relationships = relationships, boundaries = completedBoundaries),
+                Diagram(
+                    entities = entities,
+                    relationships = relationships,
+                    boundaries = completedBoundaries,
+                    rootChildren = rootChildren,
+                ),
             )
         } catch (e: IllegalArgumentException) {
             ParseResult.Failure(listOf(ParseError(e.message ?: "invalid diagram")))
@@ -193,6 +203,7 @@ internal object PlantUmlC4Parser {
             technology = args.named["techn"] ?: technology,
             tags = args.named["tags"]?.splitTags() ?: emptyList(),
             properties = args.named.filterKeys { name -> name !in setOf("descr", "techn", "tags", "id") },
+            external = macroName in EXTERNAL_ENTITY_MACROS,
         )
     }
 
@@ -214,12 +225,17 @@ internal object PlantUmlC4Parser {
             buildMap {
                 if (direction != null) put("direction", direction)
                 for ((name, value) in args.named) {
-                    if (name !in setOf("descr", "techn", "tags")) put(name, value)
+                    if (name !in setOf("descr", "techn", "id")) put(name, value)
                 }
             }
 
         return Relationship(
-            id = RelationshipId("rel-$index"),
+            // PlantUML relationships have no natural id/alias slot. `$id=` is this
+            // adapter's own extension (emitted by PlantUmlC4Generator) so that a
+            // generate()-then-parse() round-trip recovers the same RelationshipId
+            // rather than renumbering; hand-written source without `$id` falls
+            // back to a sequential id, as before.
+            id = args.named["id"]?.let { RelationshipId(it) } ?: RelationshipId("rel-$index"),
             sourceId = EntityId(sourceId),
             targetId = EntityId(targetId),
             description = description,
@@ -273,6 +289,12 @@ internal object PlantUmlC4Parser {
         )
 
     private val TECHNOLOGY_BEARING_MACROS = setOf("Container", "ContainerDb", "Component")
+
+    // Macros that set Entity.external = true (docs/adapters.md §15 "Supported
+    // Properties" — "External/Internal"). Both map to the same EntityType as
+    // their non-Ext counterpart in ENTITY_MACROS above; external-ness is a
+    // property of the entity, not a different kind of entity.
+    private val EXTERNAL_ENTITY_MACROS = setOf("Person_Ext", "System_Ext")
 
     private val BOUNDARY_MACROS: Map<String, BoundaryType> =
         mapOf(
