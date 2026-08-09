@@ -602,6 +602,24 @@ Every commit is checked against Conventional Commits (§5.1) using
 
 ---
 
+## Kotlin Formatting
+
+```
+./gradlew ktlintCheck
+```
+
+Enforced via the `org.jlleitschuh.gradle.ktlint` plugin, applied to every
+module from the root `build.gradle.kts`. The enforced style is
+`ktlint_official` (matching `kotlin.code.style=official` in
+`gradle.properties`, so the ktlint and IntelliJ formatters agree), pinned
+explicitly in the root `.editorconfig` rather than left as an implicit
+plugin default.
+
+Run `./gradlew ktlintFormat` locally to auto-fix violations before
+committing.
+
+---
+
 ## Static Analysis
 
 Not yet enabled. Examples for future consideration:

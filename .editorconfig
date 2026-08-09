@@ -1,0 +1,31 @@
+root = true
+
+# Baseline for all files. Kotlin-specific rules below are what ktlint
+# (docs/development.md §18) actually enforces in CI; this file exists so
+# that enforced style is explicit and version-controlled rather than an
+# implicit default of whichever ktlint version happens to be on the
+# classpath (gradle/libs.versions.toml).
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{kt,kts}]
+# Matches gradle.properties' kotlin.code.style=official, which governs the
+# IntelliJ formatter — ktlint_official is ktlint's equivalent codestyle, so
+# the two formatters agree instead of fighting each other.
+ktlint_code_style = ktlint_official
+max_line_length = 120
+# Trailing commas are optional in the codebase today; don't force existing
+# call sites to churn just to satisfy the formatter.
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

@@ -580,7 +580,7 @@ Unknown content preserved.
 
 Required:
 
-* Kotlin formatting.
+* Kotlin formatting (ktlint).
 * Automated tests.
 * CI builds.
 * Static analysis.
