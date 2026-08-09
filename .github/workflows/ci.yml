@@ -31,6 +31,9 @@ jobs:
       - name: Check Kotlin formatting
         run: ./gradlew ktlintCheck
 
+      - name: Static analysis
+        run: ./gradlew detekt
+
       - name: Build and test
         run: ./gradlew build test
 

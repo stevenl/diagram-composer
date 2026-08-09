@@ -1,6 +1,7 @@
 [versions]
 kotlin = "2.1.21"
 ktlint = "14.2.0"
+detekt = "1.23.7"
 compose = "1.7.0"
 junit = "5.11.0"
 intellij-platform-gradle-plugin = "2.18.1"
@@ -13,5 +14,6 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 compose = { id = "org.jetbrains.compose", version.ref = "compose" }
 intellij-platform-settings = { id = "org.jetbrains.intellij.platform.settings", version.ref = "intellij-platform-gradle-plugin" }

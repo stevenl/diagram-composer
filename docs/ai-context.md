@@ -262,6 +262,10 @@ Current implementation stage:
 
 > **Milestone 0 (project scaffolding), Milestone 1 (core domain model), Milestone 2 (adapter API), Milestone 3 (PlantUML C4 adapter — parsing), and Milestone 4 (PlantUML C4 adapter — generation) complete. Milestone 5 (core editing logic) is next.**
 
+CI (`.github/workflows/ci.yml`) now runs `ktlintCheck` and `detekt` ahead of
+`build test`, per Milestone 0 task 7. See `docs/development.md` §18 for how
+these are configured.
+
 See `docs/implementation-plan.md` for the full milestone breakdown and current position.
 
 The implementation should proceed incrementally through defined milestones.
