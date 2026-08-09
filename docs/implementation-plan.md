@@ -131,7 +131,7 @@ Goal: command-based editing of the `Diagram` model with undo/redo, independent o
 
 ---
 
-## Milestone 6 — Core ↔ Adapter Integration
+## Milestone 6 — Core ↔ Adapter Integration ✅
 
 Goal: connect edits to source regeneration and keep source/model in sync.
 
@@ -141,6 +141,24 @@ Goal: connect edits to source regeneration and keep source/model in sync.
 4. End-to-end integration tests: sequence of visual edits → verify generated source at each step; manual source edit → verify model updates.
 
 **Definition of done:** a full edit→regenerate→reparse loop is tested end-to-end without any UI involved.
+
+**Implementation notes / deviations from this plan:**
+
+- `DiagramSession` lives in **`adapter-api`**, not `core` as task 1 suggests
+  ("or similarly named" — the module wasn't mandated). It needs
+  `DiagramAdapter` to regenerate/reparse, and `core`'s build file plus
+  docs/architecture.md §3.1 forbid `core` depending on adapters. `adapter-api`
+  already depends on `core` and owns `DiagramAdapter`, so it's the natural
+  home without weakening the boundary or adding a new module. See
+  `DiagramSession`'s doc comment for the full rationale.
+- Reconciliation strategy (task 2): **full replace**. A reparsed source
+  wholesale-replaces the current `Diagram` and clears undo/redo via the new
+  `CommandHistory.reset`, rather than diffing/merging field-by-field. This
+  matches the MVP-level "adapters may fully regenerate" decision already
+  made for `DiagramAdapter.generate` (docs/adapters.md §10, §13) and avoids
+  inventing id-stability/conflict-resolution rules nothing currently needs.
+  Revisit if Milestone 9's UI work shows full replace loses something a
+  real workflow needs (e.g. in-flight selection state).
 
 ---
 

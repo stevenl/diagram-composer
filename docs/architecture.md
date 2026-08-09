@@ -575,7 +575,42 @@ classDiagram
     Failure "1" *-- "1..*" ParseError : errors
 ```
 
-`Diagram` here is the same aggregate root defined in Section 4.5 — `adapter-api` depends on `core`'s domain model types but adds none of its own; `DiagramAdapter`, `AdapterMetadata`, `ParseResult`, and `ParseError` are the only new types this module introduces.
+`Diagram` here is the same aggregate root defined in Section 4.5 — `adapter-api` depends on `core`'s domain model types but adds none of its own; `DiagramAdapter`, `AdapterMetadata`, `ParseResult`, `ParseError`, and (as of Milestone 6, §5.4) `DiagramSession`, `OpenResult`, and `ApplyExternalEditResult` are the types this module introduces.
+
+---
+
+## 5.4 DiagramSession — Core ↔ Adapter Coordinator
+
+`DiagramSession` (Milestone 6) is what Section 6's synchronisation flows actually run through — it holds one `Diagram`/`CommandHistory` pair bound to one `DiagramAdapter`, and keeps generated source text in sync with the model as commands execute, undo, and redo.
+
+It lives in `adapter-api`, not `core`: it depends on `DiagramAdapter` to parse/generate, and `core` must stay free of any adapter dependency (§3.1) so it remains reusable by every future language adapter unchanged. `adapter-api` already depends on `core` and is where `DiagramAdapter` itself lives, so it's the natural home for a type whose entire job is gluing the two together.
+
+```kotlin
+class DiagramSession {
+    val diagram: Diagram
+    val sourceText: String
+    val canUndo: Boolean
+    val canRedo: Boolean
+
+    fun execute(command: Command): Diagram
+    fun undo(): Diagram
+    fun redo(): Diagram
+    fun applyExternalEdit(newSourceText: String): ApplyExternalEditResult
+
+    companion object {
+        fun open(sourceText: String, adapter: DiagramAdapter): OpenResult
+    }
+}
+```
+
+Two entry points, both fallible where parsing is involved:
+
+* `open(sourceText, adapter)` — used when opening a real file (§8.1); parses first and returns `OpenResult.Success`/`Failure`, since there's no `Diagram` to build a session around if parsing fails.
+* the primary constructor — takes an existing in-memory `Diagram` directly (e.g. one built from scratch with no backing file yet, as `ui` will do from Milestone 7 onward).
+
+`applyExternalEdit` implements §6.1 (Text → Visual): it reparses the given source and, on success, replaces the session's `Diagram` wholesale and clears undo/redo (`CommandHistory.reset` — the existing stack's mementos aren't meaningful against a diagram they weren't captured against). On failure it returns `ApplyExternalEditResult.Rejected` and leaves the current model and source untouched, rather than guessing at a partial merge — this is a deliberate **full replace** reconciliation strategy, not a diff/merge, matching the same MVP-level "adapters may fully regenerate" decision already made for `DiagramAdapter.generate` (`docs/adapters.md` §10, §13).
+
+`execute`/`undo`/`redo` implement §6.2 (Visual → Text): each delegates to `CommandHistory` and then regenerates `sourceText` from the resulting `Diagram` via `adapter.generate`.
 
 ---
 

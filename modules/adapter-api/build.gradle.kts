@@ -1,5 +1,7 @@
 // adapter-api: the contract every language adapter (PlantUML, later Mermaid)
-// must implement. Depends only on core's domain model types (docs/adapters.md).
+// must implement, plus DiagramSession, the core<->adapter coordinator
+// (docs/implementation-plan.md Milestone 6). Depends only on core's domain
+// model and command types (docs/adapters.md).
 
 plugins {
     alias(libs.plugins.kotlin.jvm)
