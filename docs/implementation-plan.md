@@ -200,7 +200,7 @@ Goal: minimal Compose UI that displays a `Diagram` from `core`, no editing yet.
 
 ---
 
-## Milestone 8 — UI: Basic Editing
+## Milestone 8 — UI: Basic Editing ✅
 
 Goal: users can perform core edits visually, dispatching `core` commands.
 
@@ -212,6 +212,38 @@ Goal: users can perform core edits visually, dispatching `core` commands.
 6. UI/integration tests for each flow (state changes correctly after each user action).
 
 **Definition of done:** a user can build a small diagram from scratch through the UI alone, with working undo/redo.
+
+**Implementation notes / deviations from this plan:**
+
+- `DiagramViewModel` now wraps a `CommandHistory` (`core.command`) instead
+  of a bare `Diagram`, giving it `execute`/`undo`/`redo`/`canUndo`/`canRedo`.
+  This keeps task 5's `CommandHistory` wiring, and every other task's
+  command dispatch, inside `ui`'s existing "talks to `core` only" boundary
+  (docs/architecture.md §3.2) — a `DiagramSession` (`adapter-api`) would
+  also regenerate source text on every edit, but syncing that back into the
+  UI is Milestone 9's job, not this one's. `PreviewApp` therefore still only
+  reads a session's initial diagram; it does not yet push UI edits back into
+  the session.
+- Task 2 names `EditPropertyCommand`; no such command exists in `core` —
+  `EditEntityCommand` (a full-entity replace) is what Milestone 5 actually
+  built for this purpose, and `EditEntityDialog` dispatches that instead.
+- The toolbar (docs/ui.md §4.2) exposes a single "Add Entity" action rather
+  than one button per PlantUML C4 entity type: `AddEntityDialog` collects
+  the type itself, so the toolbar doesn't need PlantUML-specific buttons
+  (which would be language-specific UI logic, docs/architecture.md §5).
+- Entity/relationship identifiers are suggested by `ui.state.IdSuggestion`
+  (camelCase from the entity name; `rel1`, `rel2`, ... for relationships),
+  editable before confirming (docs/ui.md §5.3). This lives in `ui`, not
+  `core` — it's a UI convenience for prefilling a dialog field, not a model
+  invariant.
+- Boundaries have no add/edit/remove UI yet — out of this milestone's task
+  list; `AddBoundaryCommand` remains available to `core` callers but
+  unwired from the UI.
+- Task 6's UI/integration tests exercise `DiagramViewModel.execute` with
+  real `core` commands and assert on `diagram`/`elementTree`/
+  `relationshipRows`/`canUndo`/`canRedo`, rather than driving the actual
+  Compose dialogs — consistent with Milestone 7's decision not to add a
+  Compose UI test harness yet.
 
 ---
 
