@@ -1,0 +1,8 @@
+naming:
+  FunctionNaming:
+    # Composable functions follow the Compose API guideline of PascalCase
+    # (https://developer.android.com/develop/ui/compose/api-guidelines#naming-unit)
+    # to stay consistent with the library's own composables (Text, Column,
+    # AlertDialog, ...). Everything else keeps detekt's default
+    # lowerCamelCase convention.
+    ignoreAnnotated: ['Composable']

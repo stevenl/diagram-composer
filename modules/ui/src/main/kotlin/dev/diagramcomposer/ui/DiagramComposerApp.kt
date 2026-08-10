@@ -47,7 +47,7 @@ private val CONTENT_PADDING = CONTENT_PADDING_DP.dp
  * shape was chosen instead).
  */
 @Composable
-fun diagramComposerApp(viewModel: DiagramViewModel) {
+fun DiagramComposerApp(viewModel: DiagramViewModel) {
     var addEntityDialogOpen by remember { mutableStateOf(false) }
     var addRelationshipDialogOpen by remember { mutableStateOf(false) }
     var editingEntity by remember { mutableStateOf<Entity?>(null) }

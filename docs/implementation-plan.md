@@ -244,6 +244,12 @@ Goal: users can perform core edits visually, dispatching `core` commands.
   `relationshipRows`/`canUndo`/`canRedo`, rather than driving the actual
   Compose dialogs — consistent with Milestone 7's decision not to add a
   Compose UI test harness yet.
+- All composables in this milestone use PascalCase (`AddEntityDialog`,
+  `ElementExplorer`, `Toolbar`, ...), matching the Compose API guideline and
+  the library's own composables. This needed a detekt exception —
+  `config/detekt/detekt.yml` now overrides `FunctionNaming` to ignore
+  `@Composable`-annotated functions (docs/development.md §18) — since
+  detekt's default ruleset otherwise requires lowerCamelCase.
 
 ---
 

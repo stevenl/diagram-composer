@@ -628,11 +628,11 @@ committing.
 
 Enforced via the `io.gitlab.arturbosch.detekt` plugin, applied to every
 module from the root `build.gradle.kts`. Runs with `buildUponDefaultConfig
-= true` and no project-specific rule overrides yet — detekt's default
-ruleset applies as-is. Add `config/detekt/detekt.yml` and point the
-`detekt { config.setFrom(...) }` block at it if the defaults ever prove too
-noisy or too lax for this codebase; until then a config file that just
-repeats the defaults isn't worth maintaining (`ai-context.md` §5).
+= true`, plus one project-specific override in `config/detekt/detekt.yml`:
+`FunctionNaming` ignores `@Composable`-annotated functions, so composables
+follow the Compose API guideline of PascalCase (consistent with the
+library's own `Text`, `Column`, `AlertDialog`, etc.) instead of detekt's
+default lowerCamelCase. Every other rule is still the unmodified default.
 
 Dependency vulnerability checks are not yet enabled; still a candidate for
 future consideration.
