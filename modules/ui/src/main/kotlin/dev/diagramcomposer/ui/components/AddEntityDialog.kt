@@ -18,6 +18,25 @@ import dev.diagramcomposer.core.model.EntityId
 import dev.diagramcomposer.core.model.EntityType
 import dev.diagramcomposer.ui.state.suggestEntityId
 
+/** Mutable form state for [AddEntityDialog], factored out to keep that composable short. */
+private class AddEntityFormState {
+    var name by mutableStateOf("")
+    var manualId by mutableStateOf("")
+    var idEditedByUser by mutableStateOf(false)
+    var type by mutableStateOf(EntityType.CONTAINER)
+    var technology by mutableStateOf("")
+    var description by mutableStateOf("")
+}
+
+private fun AddEntityFormState.toEntity(id: String) =
+    Entity(
+        id = EntityId(id),
+        name = name.trim(),
+        type = type,
+        description = description.ifBlank { null },
+        technology = technology.ifBlank { null },
+    )
+
 /**
  * "Add entity" dialog (docs/implementation-plan.md Milestone 8 task 1;
  * docs/ui.md §5.2 "Creation Dialog"). Collects a name, an editable
@@ -29,7 +48,7 @@ import dev.diagramcomposer.ui.state.suggestEntityId
  * `DiagramComposerApp`.
  *
  * [diagram] is used only to keep the suggested identifier and the
- * uniqueness check in [confirmEnabled] up to date; it is not mutated here.
+ * uniqueness check up to date; it is not mutated here.
  */
 @Composable
 fun AddEntityDialog(
@@ -37,79 +56,65 @@ fun AddEntityDialog(
     onDismiss: () -> Unit,
     onConfirm: (Entity) -> Unit,
 ) {
-    var name by remember { mutableStateOf("") }
-    var id by remember { mutableStateOf("") }
-    var idEditedByUser by remember { mutableStateOf(false) }
-    var type by remember { mutableStateOf(EntityType.CONTAINER) }
-    var technology by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-
+    val form = remember { AddEntityFormState() }
     val existingIds = remember(diagram) { diagram.entities.map { it.id.value }.toSet() }
-    val effectiveId = id.ifBlank { suggestEntityId(name, diagram).value }
-    val confirmEnabled = name.isNotBlank() && effectiveId.isNotBlank() && effectiveId !in existingIds
+    val effectiveId = form.manualId.ifBlank { suggestEntityId(form.name, diagram).value }
+    val idTaken = effectiveId in existingIds
+    val confirmEnabled = form.name.isNotBlank() && effectiveId.isNotBlank() && !idTaken
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add Entity") },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        if (!idEditedByUser) id = ""
-                    },
-                    label = { Text("Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = effectiveId,
-                    onValueChange = {
-                        id = it
-                        idEditedByUser = true
-                    },
-                    label = { Text("Identifier") },
-                    isError = effectiveId.isNotBlank() && effectiveId in existingIds,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                DropdownField(
-                    label = "Type",
-                    options = EntityType.entries,
-                    selected = type,
-                    onSelected = { type = it },
-                    optionLabel = { it.name.lowercase() },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = technology,
-                    onValueChange = { technology = it },
-                    label = { Text("Technology") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
+        text = { AddEntityFields(form, effectiveId, idTaken) },
         confirmButton = {
-            TextButton(
-                enabled = confirmEnabled,
-                onClick = {
-                    onConfirm(
-                        Entity(
-                            id = EntityId(effectiveId),
-                            name = name.trim(),
-                            type = type,
-                            description = description.ifBlank { null },
-                            technology = technology.ifBlank { null },
-                        ),
-                    )
-                },
-            ) { Text("Create") }
+            TextButton(enabled = confirmEnabled, onClick = { onConfirm(form.toEntity(effectiveId)) }) { Text("Create") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
+}
+
+@Composable
+private fun AddEntityFields(
+    form: AddEntityFormState,
+    effectiveId: String,
+    idTaken: Boolean,
+) {
+    Column {
+        OutlinedTextField(
+            value = form.name,
+            onValueChange = {
+                form.name = it
+                if (!form.idEditedByUser) form.manualId = ""
+            },
+            label = { Text("Name") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = effectiveId,
+            onValueChange = {
+                form.manualId = it
+                form.idEditedByUser = true
+            },
+            label = { Text("Identifier") },
+            isError = idTaken,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        DropdownField(
+            spec = DropdownFieldSpec("Type", EntityType.entries, form.type) { it.name.lowercase() },
+            onSelected = { form.type = it },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = form.technology,
+            onValueChange = { form.technology = it },
+            label = { Text("Technology") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = form.description,
+            onValueChange = { form.description = it },
+            label = { Text("Description") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }

@@ -14,6 +14,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 
 /**
+ * What a [DropdownField] offers and currently shows, bundled into one type
+ * so the composable itself stays under detekt's `LongParameterList`
+ * threshold (6).
+ */
+data class DropdownFieldSpec<T>(
+    val label: String,
+    val options: List<T>,
+    val selected: T,
+    val optionLabel: (T) -> String,
+)
+
+/**
  * A labelled single-choice dropdown built from plain [DropdownMenu] (rather
  * than the experimental `ExposedDropdownMenuBox`), shared by the Milestone 8
  * editing dialogs (docs/implementation-plan.md Milestone 8 tasks 1-3) for
@@ -23,23 +35,20 @@ import androidx.compose.ui.Modifier
  */
 @Composable
 fun <T> DropdownField(
-    label: String,
-    options: List<T>,
-    selected: T,
+    spec: DropdownFieldSpec<T>,
     onSelected: (T) -> Unit,
-    optionLabel: (T) -> String,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = modifier) {
         OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-            Text("$label: ${optionLabel(selected)}")
+            Text("${spec.label}: ${spec.optionLabel(spec.selected)}")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { option ->
+            spec.options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(optionLabel(option)) },
+                    text = { Text(spec.optionLabel(option)) },
                     onClick = {
                         onSelected(option)
                         expanded = false

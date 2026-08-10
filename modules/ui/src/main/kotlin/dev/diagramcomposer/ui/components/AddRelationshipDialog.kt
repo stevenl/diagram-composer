@@ -18,6 +18,27 @@ import dev.diagramcomposer.core.model.Relationship
 import dev.diagramcomposer.core.model.RelationshipType
 import dev.diagramcomposer.ui.state.suggestRelationshipId
 
+/** Mutable form state for [AddRelationshipDialog], factored out to keep that composable short. */
+private class AddRelationshipFormState(
+    initialEntity: Entity,
+) {
+    var source by mutableStateOf(initialEntity)
+    var target by mutableStateOf(initialEntity)
+    var type by mutableStateOf(RelationshipType.DEFAULT)
+    var description by mutableStateOf("")
+    var technology by mutableStateOf("")
+}
+
+private fun AddRelationshipFormState.toRelationship(diagram: Diagram) =
+    Relationship(
+        id = suggestRelationshipId(diagram),
+        sourceId = source.id,
+        targetId = target.id,
+        description = description.ifBlank { null },
+        technology = technology.ifBlank { null },
+        type = type,
+    )
+
 /**
  * "Add relationship" dialog (docs/implementation-plan.md Milestone 8 task 3;
  * docs/ui.md §9 "Relationship Creation"). Source and target are picked from
@@ -38,71 +59,51 @@ fun AddRelationshipDialog(
 ) {
     require(diagram.entities.isNotEmpty()) { "AddRelationshipDialog requires at least one entity in the diagram" }
 
-    var source by remember(diagram) { mutableStateOf(diagram.entities.first()) }
-    var target by remember(diagram) { mutableStateOf(diagram.entities.first()) }
-    var type by remember { mutableStateOf(RelationshipType.DEFAULT) }
-    var description by remember { mutableStateOf("") }
-    var technology by remember { mutableStateOf("") }
+    val form = remember(diagram) { AddRelationshipFormState(diagram.entities.first()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add Relationship") },
-        text = {
-            Column {
-                DropdownField(
-                    label = "From",
-                    options = diagram.entities,
-                    selected = source,
-                    onSelected = { source = it },
-                    optionLabel = Entity::name,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                DropdownField(
-                    label = "To",
-                    options = diagram.entities,
-                    selected = target,
-                    onSelected = { target = it },
-                    optionLabel = Entity::name,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                DropdownField(
-                    label = "Type",
-                    options = RelationshipType.entries,
-                    selected = type,
-                    onSelected = { type = it },
-                    optionLabel = { it.name.lowercase() },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Description") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = technology,
-                    onValueChange = { technology = it },
-                    label = { Text("Technology") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-        },
+        text = { AddRelationshipFields(form, diagram.entities) },
         confirmButton = {
-            TextButton(
-                onClick = {
-                    onConfirm(
-                        Relationship(
-                            id = suggestRelationshipId(diagram),
-                            sourceId = source.id,
-                            targetId = target.id,
-                            description = description.ifBlank { null },
-                            technology = technology.ifBlank { null },
-                            type = type,
-                        ),
-                    )
-                },
-            ) { Text("Create") }
+            TextButton(onClick = { onConfirm(form.toRelationship(diagram)) }) { Text("Create") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
+}
+
+@Composable
+private fun AddRelationshipFields(
+    form: AddRelationshipFormState,
+    entities: List<Entity>,
+) {
+    Column {
+        DropdownField(
+            spec = DropdownFieldSpec("From", entities, form.source, Entity::name),
+            onSelected = { form.source = it },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        DropdownField(
+            spec = DropdownFieldSpec("To", entities, form.target, Entity::name),
+            onSelected = { form.target = it },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        DropdownField(
+            spec = DropdownFieldSpec("Type", RelationshipType.entries, form.type) { it.name.lowercase() },
+            onSelected = { form.type = it },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = form.description,
+            onValueChange = { form.description = it },
+            label = { Text("Description") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = form.technology,
+            onValueChange = { form.technology = it },
+            label = { Text("Technology") },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
