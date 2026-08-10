@@ -57,4 +57,23 @@ class CommandHistory(
         undoStack.addLast(command)
         return diagram
     }
+
+    /**
+     * Replaces the current diagram with [diagram] wholesale, clearing both
+     * the undo and redo stacks (docs/implementation-plan.md Milestone 6
+     * task 2 — reconciling with an externally edited source file).
+     *
+     * This is distinct from [execute]: it's not a [Command] applied to the
+     * current diagram, but an out-of-band replacement of it. The existing
+     * undo stack's mementos (e.g. [RemoveEntityCommand]'s captured removed
+     * state) are only meaningful relative to the specific diagram lineage
+     * they were captured against; once the diagram has been replaced
+     * wholesale, replaying them against the new diagram would produce
+     * nonsensical results, so the history is cleared rather than preserved.
+     */
+    fun reset(diagram: Diagram) {
+        this.diagram = diagram
+        undoStack.clear()
+        redoStack.clear()
+    }
 }

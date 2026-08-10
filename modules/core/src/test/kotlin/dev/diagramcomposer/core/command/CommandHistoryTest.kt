@@ -91,4 +91,19 @@ class CommandHistoryTest {
     fun `redo with an empty redo stack throws`() {
         assertThrows(IllegalStateException::class.java) { CommandHistory(Diagram()).redo() }
     }
+
+    @Test
+    fun `reset replaces the diagram and clears undo and redo stacks`() {
+        val history = CommandHistory(Diagram())
+        history.execute(AddEntityCommand(webApp))
+        history.undo()
+        history.execute(AddEntityCommand(paymentApi))
+
+        val replacement = Diagram(entities = listOf(webApp, paymentApi))
+        history.reset(replacement)
+
+        assertEquals(replacement, history.diagram)
+        assertFalse(history.canUndo)
+        assertFalse(history.canRedo)
+    }
 }
