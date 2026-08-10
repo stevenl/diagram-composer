@@ -17,7 +17,7 @@ Since we're on limited context:
 
 ---
 
-## Milestone 0 — Project Scaffolding
+## Milestone 0 — Project Scaffolding ✅
 
 Goal: an empty but correctly structured, buildable multi-module project.
 
@@ -51,7 +51,7 @@ settings.gradle.kts
 
 ---
 
-## Milestone 1 — Core Domain Model (`core`)
+## Milestone 1 — Core Domain Model (`core`) ✅
 
 Goal: a language-independent, immutable diagram model with no IntelliJ/language-specific code. This lives inside the `core` module (in its own package, e.g. `core.model`) — there is no separate `model` module, per `docs/architecture.md` §3 and `docs/engineering.md` §3.
 
@@ -68,7 +68,7 @@ Goal: a language-independent, immutable diagram model with no IntelliJ/language-
 
 ---
 
-## Milestone 2 — Adapter API (`adapter-api`)
+## Milestone 2 — Adapter API (`adapter-api`) ✅
 
 Goal: the contract that all language adapters (PlantUML now, Mermaid later) must implement.
 
@@ -83,7 +83,7 @@ Goal: the contract that all language adapters (PlantUML now, Mermaid later) must
 
 ---
 
-## Milestone 3 — PlantUML C4 Adapter: Parsing (`adapter-plantuml-c4`)
+## Milestone 3 — PlantUML C4 Adapter: Parsing (`adapter-plantuml-c4`) ✅
 
 Goal: parse PlantUML C4 source into the core `Diagram` model, incrementally by construct.
 
@@ -98,7 +98,7 @@ Goal: parse PlantUML C4 source into the core `Diagram` model, incrementally by c
 
 ---
 
-## Milestone 4 — PlantUML C4 Adapter: Generation
+## Milestone 4 — PlantUML C4 Adapter: Generation ✅
 
 Goal: generate valid PlantUML C4 source from the core `Diagram` model.
 
@@ -113,7 +113,7 @@ Goal: generate valid PlantUML C4 source from the core `Diagram` model.
 
 ---
 
-## Milestone 5 — Core Editing Logic (`core`)
+## Milestone 5 — Core Editing Logic (`core`) ✅
 
 Goal: command-based editing of the `Diagram` model with undo/redo, independent of any language or UI.
 
