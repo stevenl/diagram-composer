@@ -162,7 +162,7 @@ Goal: connect edits to source regeneration and keep source/model in sync.
 
 ---
 
-## Milestone 7 — UI: Read-Only Viewer (`ui`)
+## Milestone 7 — UI: Read-Only Viewer (`ui`) ✅
 
 Goal: minimal Compose UI that displays a `Diagram` from `core`, no editing yet.
 
@@ -172,6 +172,31 @@ Goal: minimal Compose UI that displays a `Diagram` from `core`, no editing yet.
 4. Wire a sample `DiagramSession` (backed by the PlantUML adapter) into a runnable Compose desktop preview for manual testing.
 
 **Definition of done:** running the Compose preview against a sample PlantUML file displays its elements/relationships/boundaries correctly; no editing capability yet.
+
+**Implementation notes / deviations from this plan:**
+
+- `DiagramViewModel` (`dev.diagramcomposer.ui.state`) observes a `Diagram`,
+  not a `DiagramSession` directly. `ui` must communicate only with the core
+  model (docs/architecture.md §3.2), and `DiagramSession` lives in
+  `adapter-api`, so the state holder is designed to be driven by whichever
+  caller owns a `DiagramSession` (`refresh(session.diagram)` after any
+  change), rather than importing `adapter-api` itself. `elementTree` and
+  `relationshipRows` are derived from that `Diagram` on read.
+- Task 4's preview needs a concrete `DiagramAdapter` to have anything to
+  show, so `dev.diagramcomposer.ui.preview.PreviewApp` — and only that file
+  — imports `adapter-api`/`adapter-plantuml-c4`; `ui`'s Gradle module
+  depends on both, scoped to this one entry point (see
+  `modules/ui/build.gradle.kts` and docs/architecture.md §3.2). Run via
+  `./gradlew :modules:ui:run`.
+- Element grouping reuses `Diagram.rootChildren`/`Boundary.children`
+  directly (`buildElementTree`), rather than re-deriving boundary
+  membership, so declaration order and nesting always match what the model
+  itself already enforces.
+- No Compose UI test harness added yet — the tree/list/view-model
+  transformation logic is unit tested; the composables themselves are
+  exercised via the manual preview, matching this milestone's definition of
+  done. A UI/integration test framework is introduced in Milestone 8, which
+  needs it for editing-flow tests.
 
 ---
 
