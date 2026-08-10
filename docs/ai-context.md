@@ -271,6 +271,10 @@ Current implementation stage:
 > Next:
 > - [ ] Milestone 6 (core ↔ adapter integration)
 
+CI (`.github/workflows/ci.yml`) now runs `ktlintCheck` and `detekt` ahead of
+`build test`, per Milestone 0 task 7. See `docs/development.md` §18 for how
+these are configured.
+
 See `docs/implementation-plan.md` for the full milestone breakdown and current position.
 
 The implementation should proceed incrementally through defined milestones.

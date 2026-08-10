@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test
  * than duplicating the same cases per type.
  */
 class IdTest {
-
     @Test
     fun `equal ids with the same value are equal`() {
         assertEquals(EntityId("payment-api"), EntityId("payment-api"))

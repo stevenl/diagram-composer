@@ -580,11 +580,13 @@ Unknown content preserved.
 
 Required:
 
-* Kotlin formatting.
+* Kotlin formatting (ktlint).
 * Automated tests.
 * CI builds.
-* Static analysis.
+* Static analysis (Detekt).
 * Documentation updates with major changes.
+
+See `docs/development.md` §18 for how these are wired into CI.
 
 ---
 

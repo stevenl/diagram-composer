@@ -8,7 +8,9 @@ package dev.diagramcomposer.core.model
  * boundary ids at compile time — see [RelationshipId], [BoundaryId].
  */
 @JvmInline
-value class EntityId(val value: String) {
+value class EntityId(
+    val value: String,
+) {
     init {
         require(value.isNotBlank()) { "EntityId must not be blank" }
     }

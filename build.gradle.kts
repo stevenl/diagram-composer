@@ -3,9 +3,16 @@
 // bare minimum shared configuration. Each module's own build.gradle.kts
 // owns its dependencies and behaviour — see docs/engineering.md §2.
 
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
+import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+
 plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
+    alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.detekt) apply false
     alias(libs.plugins.compose) apply false
 }
 
@@ -17,4 +24,41 @@ plugins {
 allprojects {
     group = rootProject.group
     version = rootProject.version
+
+    pluginManager.apply("org.jlleitschuh.gradle.ktlint")
+    pluginManager.apply("io.gitlab.arturbosch.detekt")
+
+    // ktlintCheck is wired into `check` (and therefore `build`) by the
+    // plugin automatically. Style rules themselves live in the root
+    // .editorconfig (ktlint_official, per gradle.properties'
+    // kotlin.code.style=official) rather than here, so there's a single
+    // place to look for what's enforced. CI runs this via `ktlintCheck`
+    // (docs/development.md §18) — see .github/workflows/ci.yml.
+    configure<KtlintExtension> {
+        verbose.set(true)
+        reporters {
+            reporter(ReporterType.PLAIN)
+            reporter(ReporterType.CHECKSTYLE)
+        }
+    }
+
+    // No custom rule set file: buildUponDefaultConfig = true means detekt's
+    // own default ruleset applies as-is (docs/development.md §18). Add
+    // config/detekt/detekt.yml and point `config.setFrom(...)` at it only
+    // once the defaults prove too noisy or too lax for this codebase —
+    // avoids maintaining a config file that just repeats the defaults
+    // (ai-context.md §5, keep it simple).
+    configure<DetektExtension> {
+        buildUponDefaultConfig = true
+        autoCorrect = false
+    }
+}
+
+// The detekt plugin's own jvmTarget default doesn't read the per-module
+// `kotlin { jvmToolchain(21) }` blocks, so it has to be set explicitly here
+// or every module's `detekt` task warns about a JVM target mismatch.
+subprojects {
+    tasks.withType<Detekt>().configureEach {
+        jvmTarget = "21"
+    }
 }

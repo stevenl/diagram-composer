@@ -4,13 +4,13 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class RelationshipTest {
-
-    private fun sampleRelationship() = Relationship(
-        id = RelationshipId("rel-1"),
-        sourceId = EntityId("web"),
-        targetId = EntityId("payment-api"),
-        description = "Uses REST API",
-    )
+    private fun sampleRelationship() =
+        Relationship(
+            id = RelationshipId("rel-1"),
+            sourceId = EntityId("web"),
+            targetId = EntityId("payment-api"),
+            description = "Uses REST API",
+        )
 
     @Test
     fun `relationships with the same field values are equal`() {
