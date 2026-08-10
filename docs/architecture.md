@@ -174,6 +174,18 @@ Responsibilities:
 
 The UI communicates only with the core model.
 
+**Milestone 7 deviation:** `ui`'s Gradle module additionally depends on
+`adapter-api` and `adapter-plantuml-c4`, but only
+`dev.diagramcomposer.ui.preview.PreviewApp` — a manual-testing entry point
+that opens a sample PlantUML file into a `DiagramSession` so there is
+something to display when running the module's Compose desktop preview
+(`docs/implementation-plan.md` Milestone 7 task 4) — imports either. The
+reusable view models (`dev.diagramcomposer.ui.state`) and composables
+(`dev.diagramcomposer.ui`, `dev.diagramcomposer.ui.components`) that
+`intellij-plugin` will consume from Milestone 10 onward still import only
+`core`, so the principle above holds for anything actually shipped. See
+`modules/ui/build.gradle.kts` and `PreviewApp.kt` for the full rationale.
+
 ---
 
 ## 3.3 Adapter API Module
