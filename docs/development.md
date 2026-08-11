@@ -621,7 +621,13 @@ the same file since it's ktlint's supported mechanism for this rather than
 a project-specific rule.
 
 Run `./gradlew ktlintFormat` locally to auto-fix violations before
-committing.
+committing. If this fails with a configuration-cache serialization error
+mentioning `DefaultProject` on a Kotlin-script task (`gradle.properties`
+sets `org.gradle.configuration-cache=true`), it's a known open ktlint-gradle
+issue scoped to `ktlintFormat`'s `.kts`-linting task
+(JLLeitschuh/ktlint-gradle#936) — CI's `ktlintCheck` isn't known to be
+affected. Work around it locally with
+`./gradlew ktlintFormat --no-configuration-cache`.
 
 ---
 
