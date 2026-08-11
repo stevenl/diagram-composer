@@ -613,7 +613,12 @@ module from the root `build.gradle.kts`. The enforced style is
 `ktlint_official` (matching `kotlin.code.style=official` in
 `gradle.properties`, so the ktlint and IntelliJ formatters agree), pinned
 explicitly in the root `.editorconfig` rather than left as an implicit
-plugin default.
+plugin default. `.editorconfig` also sets
+`ktlint_function_naming_ignore_when_annotated_with = Composable`, so
+`standard:function-naming` allows PascalCase `@Composable` functions —
+the same exception as detekt's `FunctionNaming` override below, kept in
+the same file since it's ktlint's supported mechanism for this rather than
+a project-specific rule.
 
 Run `./gradlew ktlintFormat` locally to auto-fix violations before
 committing.
