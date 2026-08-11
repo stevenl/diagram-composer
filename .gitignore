@@ -6,6 +6,7 @@ out/
 !.idea/icon.svg
 .kotlin/
 local.properties
+mise.toml
 *.zip
 
 # IntelliJ Platform Gradle Plugin sandbox

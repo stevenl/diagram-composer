@@ -42,15 +42,16 @@ allprojects {
         }
     }
 
-    // No custom rule set file: buildUponDefaultConfig = true means detekt's
-    // own default ruleset applies as-is (docs/development.md §18). Add
-    // config/detekt/detekt.yml and point `config.setFrom(...)` at it only
-    // once the defaults prove too noisy or too lax for this codebase —
-    // avoids maintaining a config file that just repeats the defaults
-    // (ai-context.md §5, keep it simple).
+    // Custom rule set file: only overrides FunctionNaming, to allow
+    // PascalCase @Composable functions (Compose API guideline,
+    // https://developer.android.com/develop/ui/compose/api-guidelines#naming-unit)
+    // — consistent with the library's own composables (Text, Column, ...).
+    // buildUponDefaultConfig = true means every other default rule still
+    // applies as-is (docs/development.md §18).
     configure<DetektExtension> {
         buildUponDefaultConfig = true
         autoCorrect = false
+        config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     }
 }
 

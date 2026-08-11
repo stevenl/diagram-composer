@@ -613,7 +613,12 @@ module from the root `build.gradle.kts`. The enforced style is
 `ktlint_official` (matching `kotlin.code.style=official` in
 `gradle.properties`, so the ktlint and IntelliJ formatters agree), pinned
 explicitly in the root `.editorconfig` rather than left as an implicit
-plugin default.
+plugin default. `.editorconfig` also sets
+`ktlint_function_naming_ignore_when_annotated_with = Composable`, so
+`standard:function-naming` allows PascalCase `@Composable` functions —
+the same exception as detekt's `FunctionNaming` override below, kept in
+the same file since it's ktlint's supported mechanism for this rather than
+a project-specific rule.
 
 Run `./gradlew ktlintFormat` locally to auto-fix violations before
 committing.
@@ -628,11 +633,11 @@ committing.
 
 Enforced via the `io.gitlab.arturbosch.detekt` plugin, applied to every
 module from the root `build.gradle.kts`. Runs with `buildUponDefaultConfig
-= true` and no project-specific rule overrides yet — detekt's default
-ruleset applies as-is. Add `config/detekt/detekt.yml` and point the
-`detekt { config.setFrom(...) }` block at it if the defaults ever prove too
-noisy or too lax for this codebase; until then a config file that just
-repeats the defaults isn't worth maintaining (`ai-context.md` §5).
+= true`, plus one project-specific override in `config/detekt/detekt.yml`:
+`FunctionNaming` ignores `@Composable`-annotated functions, so composables
+follow the Compose API guideline of PascalCase (consistent with the
+library's own `Text`, `Column`, `AlertDialog`, etc.) instead of detekt's
+default lowerCamelCase. Every other rule is still the unmodified default.
 
 Dependency vulnerability checks are not yet enabled; still a candidate for
 future consideration.

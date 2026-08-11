@@ -269,9 +269,10 @@ Current implementation stage:
 > - [x] Milestone 5 (core editing logic)
 > - [x] Milestone 6 (core ↔ adapter integration)
 > - [x] Milestone 7 (UI: read-only viewer)
+> - [x] Milestone 8 (UI: basic editing)
 >
 > Next:
-> - [ ] Milestone 8 (UI: basic editing)
+> - [ ] Milestone 9 (UI: source view & two-way sync)
 
 CI (`.github/workflows/ci.yml`) now runs `ktlintCheck` and `detekt` ahead of
 `build test`, per Milestone 0 task 7. See `docs/development.md` §18 for how

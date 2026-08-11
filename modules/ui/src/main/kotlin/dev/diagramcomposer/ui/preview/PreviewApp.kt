@@ -5,14 +5,14 @@ import androidx.compose.ui.window.application
 import dev.diagramcomposer.adapter.plantumlc4.PlantUmlC4Adapter
 import dev.diagramcomposer.adapterapi.DiagramSession
 import dev.diagramcomposer.adapterapi.OpenResult
-import dev.diagramcomposer.ui.diagramComposerApp
+import dev.diagramcomposer.ui.DiagramComposerApp
 import dev.diagramcomposer.ui.state.DiagramViewModel
 
 /**
  * Manual-testing entry point for Milestone 7 task 4
  * (docs/implementation-plan.md): opens a sample PlantUML C4 source with
  * [PlantUmlC4Adapter], wraps the resulting `Diagram` in a read-only
- * [DiagramViewModel], and renders [diagramComposerApp] in a plain Compose
+ * [DiagramViewModel], and renders [DiagramComposerApp] in a plain Compose
  * desktop window — the "runnable Compose desktop preview" the task
  * describes.
  *
@@ -57,7 +57,7 @@ fun main() {
 
     application {
         Window(onCloseRequest = ::exitApplication, title = "Diagram Composer — Preview") {
-            diagramComposerApp(viewModel)
+            DiagramComposerApp(viewModel)
         }
     }
 }
