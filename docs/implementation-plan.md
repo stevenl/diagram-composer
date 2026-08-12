@@ -247,14 +247,11 @@ Goal: users can perform core edits visually, dispatching `core` commands.
 - All composables in this milestone use PascalCase (`AddEntityDialog`,
   `ElementExplorer`, `Toolbar`, ...), matching the Compose API guideline and
   the library's own composables. This needed exceptions in both linters:
-  `config/detekt/detekt-compose.yml` overrides `FunctionNaming`, and
-  `.editorconfig` sets
-  `ktlint_function_naming_ignore_when_annotated_with = Composable`
-  (docs/development.md §18) — both ignore `@Composable`-annotated
+  `config/detekt/detekt-compose.yml` overrides `FunctionNaming`, and 
+  `.editorconfig` sets `ktlint_function_naming_ignore_when_annotated_with =
+  Composable` (docs/development.md §18) — both ignore `@Composable`-annotated
   functions, since each linter's default ruleset otherwise requires
-  lowerCamelCase. The same detekt file also relaxes `LongParameterList`/
-  `LongMethod` for `modules/ui` — see that section for why these are
-  scoped to `ui` rather than every module.
+  lowerCamelCase.
 
 ---
 
@@ -273,15 +270,89 @@ Goal: expose the generated source and support manual edits flowing back into the
 
 ## Milestone 10 — IntelliJ Plugin Integration
 
-Goal: run Diagram Composer as an IntelliJ tool window against real PlantUML C4 files.
+Goal: run Diagram Composer as an IntelliJ split source/visual editor against real PlantUML C4 files.
 
-1. Register a tool window in `plugin.xml` and embed the Compose UI inside it.
-2. Detect and associate `.puml`/PlantUML C4 files with the tool window (file type/editor association logic).
+1. Register a `FileEditorProvider` in `plugin.xml` supplying a split source/visual editor (source: the real IntelliJ text editor; visual: the Compose UI), per docs/engineering.md §2.5 and docs/ui.md §3.1. (Originally specced here as "a tool window" — corrected to match the fuller split-editor design in engineering.md/ui.md; see implementation notes below.)
+2. Detect and associate `.puml`/PlantUML C4 files with the split editor (file type/editor association logic).
 3. Load a real file's content into a `DiagramSession` on open; save edits back to disk.
 4. Confirm interoperability with an existing PlantUML rendering plugin (no in-house rendering) — document how they coexist (e.g., editing side-by-side with the rendering preview).
 5. Manual/integration test pass: open, edit, save, and re-open a real `.puml` file; verify no data loss.
 
 **Definition of done:** plugin can be built and run in a sandbox IDE instance; a real PlantUML C4 file can be opened, edited visually, and saved without corrupting content outside the plugin's understanding (e.g., comments, unsupported syntax) — define and document this preservation guarantee explicitly.
+
+**Implementation notes / deviations from this plan:**
+
+- **Task 1 wording corrected — split `FileEditor`, not a tool window:** this
+  task originally read "register a tool window ... embed the Compose UI
+  inside it", which conflicted with docs/engineering.md §2.5 (the split
+  source/visual layout is implemented as a `FileEditorProvider` supplying a
+  custom `FileEditor`, "conceptually similar to the platform's
+  `TextEditorWithPreview`") and docs/ui.md §3.1's split-editor layout. Per
+  ai-context.md §13, the fuller specifications take precedence, so the task
+  text above was rewritten to match what was actually built:
+  `DiagramComposerEditorProvider` registers `DiagramComposerSplitEditor` (a
+  `TextEditorWithPreview` subclass); see that class's doc comment.
+  docs/architecture.md §8's tool window (entity explorer/navigation/search)
+  remains a separate, not-yet-scheduled piece of functionality unaffected
+  by this.
+- **File association without a competing `FileType` (task 2):**
+  `DiagramComposerEditorProvider.accept` matches `.puml`/`.plantuml` by
+  filename against `PlantUmlC4Adapter().metadata.fileExtensions` rather than
+  registering a `com.intellij.fileType` — those extensions are already
+  commonly claimed by the community PlantUML IntelliJ plugin, and
+  `FileEditorProvider`s for the same file type don't conflict the way
+  competing `FileType` registrations would.
+- **Loading/saving (task 3):** `DiagramComposerEditorProvider` opens a
+  `DiagramSession` from the file's `Document` text on `createEditor`.
+  `DocumentDiagramSourceSync` writes each visual edit's regenerated source
+  back into the same `Document` inside a single `WriteCommandAction`
+  (docs/engineering.md §2.5), so it becomes one IntelliJ undo entry and
+  saves to disk through the platform's normal `Document`/`VirtualFile`
+  flow — no separate save step was needed. A `DocumentListener` forwards the
+  reverse direction (user edits in the real text editor) into
+  `DiagramViewModel.applyExternalSourceEdit`, guarded by
+  `DocumentDiagramSourceSync.isApplyingProgrammaticChange` so the plugin's
+  own writes don't loop back as if they were external edits.
+- **Coexistence with a PlantUML rendering plugin (task 4):** documented on
+  `DiagramComposerEditorProvider` — both editors watch the same `Document`,
+  so a visual edit here is picked up by any rendering plugin exactly like
+  any other text change (docs/architecture.md §9), with no direct coupling
+  between the two plugins.
+- **Parse failure on open:** if the file's initial content doesn't parse,
+  the visual side falls back to `DiagramParseErrorFileEditor` (a plain error
+  message) rather than refusing to open the file — the real text editor
+  side stays fully usable so the user can fix the syntax and reopen.
+- **`DiagramSessionSourceSync` vs. `DocumentDiagramSourceSync`:** the
+  `DiagramSourceSync` (`ui`) implementation is split into a pure,
+  IntelliJ-import-free class (`DiagramSessionSourceSync`, unit tested
+  against a real `DiagramSession`/`PlantUmlC4Adapter` the same way
+  `DiagramSessionTest` tests `DiagramSession` itself) and a thin
+  platform-facing decorator (`DocumentDiagramSourceSync`) that adds the
+  `Document`/`WriteCommandAction` behavior. This keeps the untestable
+  surface area (anything touching IntelliJ platform types) as small as
+  possible given this project has no IntelliJ platform test-fixture harness
+  set up yet.
+- **No PSI grammar yet:** `.puml`/`.plantuml` files are read/written as
+  plain `Document` text, not through a custom `com.intellij.lang.Language`
+  PSI grammar (docs/engineering.md §2.5 describes this as the fuller target
+  shape). `adapter-plantuml-c4`'s existing hand-written parser/generator
+  already does the actual source↔`Diagram` translation `DiagramSession`
+  needs; a PSI grammar would only be needed for syntax
+  highlighting/completion/refactoring, none of which this milestone's task
+  list requires (ai-context.md §5 "Keep It Simple"). Left as a documented
+  follow-up if a future milestone wants those capabilities.
+- **Task 5 (manual/integration test pass):** this milestone's own task 5
+  calls for a manual/integration pass rather than automated tests, since
+  exercising a real `FileEditorProvider`/`Document`/`WriteCommandAction`
+  flow needs the IntelliJ platform test framework (`TestFrameworkType`),
+  which isn't configured in this project yet. Automated coverage here is
+  limited to `DiagramSessionSourceSync` (pure Kotlin); the platform-facing
+  classes (`DiagramComposerEditorProvider`, `DocumentDiagramSourceSync`,
+  `DiagramVisualFileEditor`, `DiagramComposerSplitEditor`,
+  `DiagramParseErrorFileEditor`) need running-sandbox verification, along
+  with build verification of the new Compose-in-IntelliJ-classloader
+  dependency, both flagged as the first things to check locally
+  (ai-context.md's existing "Claude cannot run `./gradlew`" constraint).
 
 ---
 
