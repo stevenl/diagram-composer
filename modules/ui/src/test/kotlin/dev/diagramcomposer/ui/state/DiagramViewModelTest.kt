@@ -105,4 +105,77 @@ class DiagramViewModelTest {
         assertFalse(viewModel.canUndo)
         assertFalse(viewModel.canRedo)
     }
+
+    @Test
+    fun `without a source sync, source text stays at its initial value`() {
+        val viewModel = DiagramViewModel(Diagram(entities = listOf(web)), initialSourceText = "unchanged")
+
+        viewModel.execute(AddEntityCommand(api))
+
+        assertEquals("unchanged", viewModel.sourceText)
+    }
+
+    @Test
+    fun `execute regenerates source text through the source sync`() {
+        val sync = FakeDiagramSourceSync(Diagram(entities = listOf(web))) { "generated:${it.entities.size}" }
+        val viewModel = DiagramViewModel(Diagram(entities = listOf(web)), sourceSync = sync)
+
+        viewModel.execute(AddEntityCommand(api))
+
+        assertEquals("generated:2", viewModel.sourceText)
+    }
+
+    @Test
+    fun `undo and redo regenerate source text through the source sync`() {
+        val sync = FakeDiagramSourceSync(Diagram(entities = listOf(web))) { "generated:${it.entities.size}" }
+        val viewModel = DiagramViewModel(Diagram(entities = listOf(web)), sourceSync = sync)
+        viewModel.execute(AddEntityCommand(api))
+
+        viewModel.undo()
+        assertEquals("generated:1", viewModel.sourceText)
+
+        viewModel.redo()
+        assertEquals("generated:2", viewModel.sourceText)
+    }
+
+    @Test
+    fun `applyExternalSourceEdit replaces the diagram and keeps the typed text verbatim on success`() {
+        val sync = FakeDiagramSourceSync(Diagram(entities = listOf(web))) { "generated:${it.entities.size}" }
+        val viewModel = DiagramViewModel(Diagram(entities = listOf(web)), sourceSync = sync)
+        val edited = Diagram(entities = listOf(web, api))
+        sync.externalEditResult = SourceEditOutcome.Applied(edited)
+
+        viewModel.applyExternalSourceEdit("hand-typed source")
+
+        assertEquals(edited, viewModel.diagram)
+        assertEquals("hand-typed source", viewModel.sourceText)
+        assertEquals(emptyList<String>(), viewModel.sourceParseErrors)
+        assertFalse(viewModel.canUndo)
+        assertFalse(viewModel.canRedo)
+    }
+
+    @Test
+    fun `applyExternalSourceEdit surfaces errors without touching diagram or source text on failure`() {
+        val sync = FakeDiagramSourceSync(Diagram(entities = listOf(web))) { "generated:${it.entities.size}" }
+        val viewModel =
+            DiagramViewModel(Diagram(entities = listOf(web)), initialSourceText = "original", sourceSync = sync)
+        sync.externalEditResult = SourceEditOutcome.Rejected(listOf("Unable to parse relationship."))
+
+        viewModel.applyExternalSourceEdit("broken source")
+
+        assertEquals(Diagram(entities = listOf(web)), viewModel.diagram)
+        assertEquals("original", viewModel.sourceText)
+        assertEquals(listOf("Unable to parse relationship."), viewModel.sourceParseErrors)
+    }
+
+    @Test
+    fun `applyExternalSourceEdit is a no-op without a source sync`() {
+        val viewModel = DiagramViewModel(Diagram(entities = listOf(web)), initialSourceText = "original")
+
+        viewModel.applyExternalSourceEdit("typed while nothing is wired up")
+
+        assertEquals(Diagram(entities = listOf(web)), viewModel.diagram)
+        assertEquals("original", viewModel.sourceText)
+        assertEquals(emptyList<String>(), viewModel.sourceParseErrors)
+    }
 }

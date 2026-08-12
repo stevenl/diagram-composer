@@ -21,18 +21,30 @@ import dev.diagramcomposer.core.model.Diagram
  * with the core model (docs/architecture.md §3.2), the same reasoning
  * Milestone 7 already established for this class. [CommandHistory] lives in
  * `core.command`, so wrapping it here keeps that boundary intact.
- * Synchronising a `DiagramSession`'s generated source text with UI-driven
- * edits is Milestone 9's "Source View & Two-Way Sync", not this milestone's
- * concern — see `dev.diagramcomposer.ui.preview.PreviewApp`, which still
- * only reads a session's initial diagram and does not push edits back into
- * it.
+ * Milestone 9 needs this class to stay in sync with a `DiagramSession`
+ * anyway (source view & two-way sync) — see [DiagramSourceSync] for how
+ * that's done without pulling `adapter-api` into this class's dependencies.
  *
  * [elementTree] and [relationshipRows] are derived from [diagram] on read
  * rather than stored independently, so they can never drift out of sync
  * with it.
+ *
+ * ## Source text (Milestone 9)
+ *
+ * [sourceText]/[sourceParseErrors] give `ui` a source panel to display
+ * without importing `adapter-api` (docs/architecture.md §3.2): the actual
+ * regeneration/reparsing is delegated to an injected [DiagramSourceSync],
+ * supplied by whoever owns a real `DiagramSession` (`PreviewApp` today,
+ * `intellij-plugin` from Milestone 10). When [sourceSync] is `null` (every
+ * existing single-diagram-argument construction, including all Milestone
+ * 7/8 tests), source stays at [initialSourceText] and
+ * [applyExternalSourceEdit] is a no-op — there is nothing to regenerate
+ * against.
  */
 class DiagramViewModel(
     initialDiagram: Diagram,
+    initialSourceText: String = "",
+    private val sourceSync: DiagramSourceSync? = null,
 ) {
     private val history = CommandHistory(initialDiagram)
 
@@ -45,6 +57,14 @@ class DiagramViewModel(
     var canRedo: Boolean by mutableStateOf(history.canRedo)
         private set
 
+    /** Source text generated from [diagram], kept in sync via [sourceSync]. */
+    var sourceText: String by mutableStateOf(initialSourceText)
+        private set
+
+    /** Parse errors from the most recent rejected [applyExternalSourceEdit], if any. */
+    var sourceParseErrors: List<String> by mutableStateOf(emptyList())
+        private set
+
     val elementTree: List<ElementTreeNode> get() = buildElementTree(diagram)
     val relationshipRows: List<RelationshipRow> get() = buildRelationshipRows(diagram)
 
@@ -52,18 +72,21 @@ class DiagramViewModel(
     fun execute(command: Command) {
         history.execute(command)
         syncFromHistory()
+        sourceSync?.let { sourceText = it.execute(command) }
     }
 
     /** Reverses the most recently executed (or redone) command (Milestone 8 task 5). */
     fun undo() {
         history.undo()
         syncFromHistory()
+        sourceSync?.let { sourceText = it.undo() }
     }
 
     /** Re-applies the most recently undone command (Milestone 8 task 5). */
     fun redo() {
         history.redo()
         syncFromHistory()
+        sourceSync?.let { sourceText = it.redo() }
     }
 
     /**
@@ -75,6 +98,31 @@ class DiagramViewModel(
     fun refresh(newDiagram: Diagram) {
         history.reset(newDiagram)
         syncFromHistory()
+    }
+
+    /**
+     * Applies a manual edit made directly to the source panel
+     * (docs/implementation-plan.md Milestone 9 task 2). On success, the
+     * diagram is replaced wholesale (mirroring [refresh]) and [sourceText]
+     * is set to exactly [newSourceText] — not regenerated — so the user's
+     * own formatting survives a round trip. On failure, [diagram] and
+     * [sourceText] are left untouched and the parse errors are surfaced via
+     * [sourceParseErrors] (task 3) rather than corrupting existing state.
+     * A no-op if no [sourceSync] was supplied.
+     */
+    fun applyExternalSourceEdit(newSourceText: String) {
+        val sync = sourceSync ?: return
+        when (val outcome = sync.applyExternalEdit(newSourceText)) {
+            is SourceEditOutcome.Applied -> {
+                history.reset(outcome.diagram)
+                syncFromHistory()
+                sourceText = newSourceText
+                sourceParseErrors = emptyList()
+            }
+            is SourceEditOutcome.Rejected -> {
+                sourceParseErrors = outcome.errors
+            }
+        }
     }
 
     private fun syncFromHistory() {

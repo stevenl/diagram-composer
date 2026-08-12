@@ -186,6 +186,17 @@ reusable view models (`dev.diagramcomposer.ui.state`) and composables
 `core`, so the principle above holds for anything actually shipped. See
 `modules/ui/build.gradle.kts` and `PreviewApp.kt` for the full rationale.
 
+**Milestone 9 addition:** syncing generated source text with a real
+`DiagramSession` (§6) without breaking the boundary above required a small
+seam: `dev.diagramcomposer.ui.state.DiagramSourceSync` is an interface,
+expressed only in `core`/`kotlin.String` terms, that `DiagramViewModel`
+calls into on every command and on manual source edits. `PreviewApp`
+supplies the real, `DiagramSession`-backed implementation (`SessionSourceSync`);
+`intellij-plugin` is expected to supply its own from Milestone 10. This
+keeps the dependency arrow pointing the same way as the rest of this
+section — `ui` depends on nothing beyond `core` to *compile*, while still
+letting a `DiagramSession`-owning caller drive it at runtime.
+
 ---
 
 ## 3.3 Adapter API Module
