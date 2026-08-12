@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.1.21"
 ktlint = "14.2.0"
-detekt = "1.23.7"
+detekt = "1.23.8"
 compose = "1.7.0"
 junit = "5.11.0"
 intellij-platform-gradle-plugin = "2.18.1"
