@@ -23,7 +23,6 @@ import dev.diagramcomposer.ui.components.EditEntityDialog
 import dev.diagramcomposer.ui.components.ElementExplorer
 import dev.diagramcomposer.ui.components.RelationshipList
 import dev.diagramcomposer.ui.components.Toolbar
-import dev.diagramcomposer.ui.components.ToolbarActions
 import dev.diagramcomposer.ui.components.ToolbarState
 import dev.diagramcomposer.ui.state.DiagramViewModel
 
@@ -109,13 +108,10 @@ private fun DiagramWorkspace(
                     canUndo = viewModel.canUndo,
                     canRedo = viewModel.canRedo,
                 ),
-            actions =
-                ToolbarActions(
-                    onAddEntity = onAddEntity,
-                    onAddRelationship = onAddRelationship,
-                    onUndo = viewModel::undo,
-                    onRedo = viewModel::redo,
-                ),
+            onAddEntity = onAddEntity,
+            onAddRelationship = onAddRelationship,
+            onUndo = viewModel::undo,
+            onRedo = viewModel::redo,
         )
         Row(modifier = Modifier.fillMaxSize()) {
             ElementExplorer(

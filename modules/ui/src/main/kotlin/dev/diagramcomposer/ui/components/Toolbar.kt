@@ -12,8 +12,8 @@ private val BUTTON_SPACING = 4.dp
 
 /**
  * Which toolbar actions are currently available, decoupled from the
- * callbacks themselves so [Toolbar] stays under detekt's `LongParameterList`
- * threshold (6).
+ * callbacks themselves so [Toolbar] stays under a 6-parameter signature
+ * (AGENTS.md "Kotlin Guidelines" / detekt's `LongParameterList`).
  *
  * [canAddRelationship] is `false` when the diagram has no entities yet,
  * since [AddRelationshipDialog] requires at least one to pick a
@@ -23,16 +23,6 @@ data class ToolbarState(
     val canAddRelationship: Boolean,
     val canUndo: Boolean,
     val canRedo: Boolean,
-)
-
-/**
- * The toolbar's callbacks, bundled for the same reason as [ToolbarState].
- */
-data class ToolbarActions(
-    val onAddEntity: () -> Unit,
-    val onAddRelationship: () -> Unit,
-    val onUndo: () -> Unit,
-    val onRedo: () -> Unit,
 )
 
 /**
@@ -47,15 +37,16 @@ data class ToolbarActions(
 @Composable
 fun Toolbar(
     state: ToolbarState,
-    actions: ToolbarActions,
+    onAddEntity: () -> Unit,
+    onAddRelationship: () -> Unit,
+    onUndo: () -> Unit,
+    onRedo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier.padding(vertical = BUTTON_SPACING)) {
-        TextButton(onClick = actions.onAddEntity) { Text("Add Entity") }
-        TextButton(onClick = actions.onAddRelationship, enabled = state.canAddRelationship) {
-            Text("Add Relationship")
-        }
-        TextButton(onClick = actions.onUndo, enabled = state.canUndo) { Text("Undo") }
-        TextButton(onClick = actions.onRedo, enabled = state.canRedo) { Text("Redo") }
+        TextButton(onClick = onAddEntity) { Text("Add Entity") }
+        TextButton(onClick = onAddRelationship, enabled = state.canAddRelationship) { Text("Add Relationship") }
+        TextButton(onClick = onUndo, enabled = state.canUndo) { Text("Undo") }
+        TextButton(onClick = onRedo, enabled = state.canRedo) { Text("Redo") }
     }
 }

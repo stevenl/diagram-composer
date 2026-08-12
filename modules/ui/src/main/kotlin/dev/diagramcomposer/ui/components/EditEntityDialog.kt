@@ -50,8 +50,11 @@ fun EditEntityDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 DropdownField(
-                    spec = DropdownFieldSpec("Type", EntityType.entries, type) { it.name.lowercase() },
+                    label = "Type",
+                    options = EntityType.entries,
+                    selected = type,
                     onSelected = { type = it },
+                    optionLabel = { it.name.lowercase() },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
