@@ -243,6 +243,19 @@ Responsibilities:
 * Tool windows.
 * Editor integration.
 
+**Milestone 10:** editor integration is implemented as a
+`FileEditorProvider` (`DiagramComposerEditorProvider`) supplying a
+`TextEditorWithPreview`-based split editor (`DiagramComposerSplitEditor`)
+for `.puml`/`.plantuml` files — the source side is a real IntelliJ
+`TextEditor`; the visual side (`DiagramVisualFileEditor`) hosts `ui`'s
+existing `DiagramComposerApp` in a Compose Desktop `ComposePanel`. File
+detection matches extensions directly against
+`PlantUmlC4Adapter().metadata.fileExtensions` rather than registering a
+competing `FileType`, avoiding conflict with the `.puml`/`.plantuml`
+association the community PlantUML plugin already commonly owns. No tool
+window or actions are implemented yet — see §8 for that remaining, separate
+scope (entity explorer/navigation/search).
+
 ---
 
 # 4. Core Domain Model

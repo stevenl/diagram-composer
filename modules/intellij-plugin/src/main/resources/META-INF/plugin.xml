@@ -6,13 +6,18 @@
     <description>
         <![CDATA[
         Visual authoring for text-based diagrams (PlantUML C4, with Mermaid
-        planned). Scaffolding only at this stage — no functionality yet.
+        planned). Opens .puml/.plantuml files in a split source/visual
+        editor — edit visually or edit the source directly, kept in sync.
         ]]>
     </description>
 
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Tool window registration lands in Milestone 10. -->
+        <!-- docs/implementation-plan.md Milestone 10: split source/visual
+             editor for PlantUML C4 files. See DiagramComposerEditorProvider's
+             doc comment for why this is a FileEditorProvider rather than the
+             tool window Milestone 10 task 1 literally describes. -->
+        <fileEditorProvider implementation="dev.diagramcomposer.intellijplugin.DiagramComposerEditorProvider"/>
     </extensions>
 </idea-plugin>
