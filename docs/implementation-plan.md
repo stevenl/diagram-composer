@@ -247,14 +247,11 @@ Goal: users can perform core edits visually, dispatching `core` commands.
 - All composables in this milestone use PascalCase (`AddEntityDialog`,
   `ElementExplorer`, `Toolbar`, ...), matching the Compose API guideline and
   the library's own composables. This needed exceptions in both linters:
-  `config/detekt/detekt-compose.yml` overrides `FunctionNaming`, and
-  `.editorconfig` sets
-  `ktlint_function_naming_ignore_when_annotated_with = Composable`
-  (docs/development.md §18) — both ignore `@Composable`-annotated
+  `config/detekt/detekt-compose.yml` overrides `FunctionNaming`, and 
+  `.editorconfig` sets `ktlint_function_naming_ignore_when_annotated_with =
+  Composable` (docs/development.md §18) — both ignore `@Composable`-annotated
   functions, since each linter's default ruleset otherwise requires
-  lowerCamelCase. The same detekt file also relaxes `LongParameterList`/
-  `LongMethod` for `modules/ui` — see that section for why these are
-  scoped to `ui` rather than every module.
+  lowerCamelCase.
 
 ---
 
@@ -273,10 +270,10 @@ Goal: expose the generated source and support manual edits flowing back into the
 
 ## Milestone 10 — IntelliJ Plugin Integration
 
-Goal: run Diagram Composer as an IntelliJ tool window against real PlantUML C4 files.
+Goal: run Diagram Composer as an IntelliJ split source/visual editor against real PlantUML C4 files.
 
-1. Register a tool window in `plugin.xml` and embed the Compose UI inside it.
-2. Detect and associate `.puml`/PlantUML C4 files with the tool window (file type/editor association logic).
+1. Register a `FileEditorProvider` in `plugin.xml` supplying a split source/visual editor (source: the real IntelliJ text editor; visual: the Compose UI), per docs/engineering.md §2.5 and docs/ui.md §3.1. (Originally specced here as "a tool window" — corrected to match the fuller split-editor design in engineering.md/ui.md; see implementation notes below.)
+2. Detect and associate `.puml`/PlantUML C4 files with the split editor (file type/editor association logic).
 3. Load a real file's content into a `DiagramSession` on open; save edits back to disk.
 4. Confirm interoperability with an existing PlantUML rendering plugin (no in-house rendering) — document how they coexist (e.g., editing side-by-side with the rendering preview).
 5. Manual/integration test pass: open, edit, save, and re-open a real `.puml` file; verify no data loss.
@@ -285,15 +282,16 @@ Goal: run Diagram Composer as an IntelliJ tool window against real PlantUML C4 f
 
 **Implementation notes / deviations from this plan:**
 
-- **Task 1 deviation — split `FileEditor`, not a tool window:** this task's
-  literal wording ("register a tool window ... embed the Compose UI inside
-  it") conflicts with docs/engineering.md §2.5, which specifies the split
+- **Task 1 wording corrected — split `FileEditor`, not a tool window:** this
+  task originally read "register a tool window ... embed the Compose UI
+  inside it", which conflicted with docs/engineering.md §2.5 (the split
   source/visual layout is implemented as a `FileEditorProvider` supplying a
-  custom `FileEditor` ("conceptually similar to the platform's
-  `TextEditorWithPreview`"), and with docs/ui.md §3.1's split-editor layout.
-  Per ai-context.md §13, the fuller specifications take precedence.
+  custom `FileEditor`, "conceptually similar to the platform's
+  `TextEditorWithPreview`") and docs/ui.md §3.1's split-editor layout. Per
+  ai-context.md §13, the fuller specifications take precedence, so the task
+  text above was rewritten to match what was actually built:
   `DiagramComposerEditorProvider` registers `DiagramComposerSplitEditor` (a
-  `TextEditorWithPreview` subclass) instead; see that class's doc comment.
+  `TextEditorWithPreview` subclass); see that class's doc comment.
   docs/architecture.md §8's tool window (entity explorer/navigation/search)
   remains a separate, not-yet-scheduled piece of functionality unaffected
   by this.

@@ -190,12 +190,28 @@ reusable view models (`dev.diagramcomposer.ui.state`) and composables
 `DiagramSession` (§6) without breaking the boundary above required a small
 seam: `dev.diagramcomposer.ui.state.DiagramSourceSync` is an interface,
 expressed only in `core`/`kotlin.String` terms, that `DiagramViewModel`
-calls into on every command and on manual source edits. `PreviewApp`
-supplies the real, `DiagramSession`-backed implementation (`SessionSourceSync`);
-`intellij-plugin` is expected to supply its own from Milestone 10. This
-keeps the dependency arrow pointing the same way as the rest of this
+calls into on every command and on manual source edits (`sourceSync` is
+nullable, defaulting to `null`, so `DiagramViewModel` still works with no
+sync backing at all). This keeps the dependency arrow pointing the same
+way as the rest of this
 section — `ui` depends on nothing beyond `core` to *compile*, while still
 letting a `DiagramSession`-owning caller drive it at runtime.
+
+`PreviewApp` (Milestone 7) does not currently supply a `DiagramSourceSync`
+implementation — it constructs `DiagramViewModel` with the default `null`,
+so Milestone 9's two-way sync isn't exercised in the standalone preview.
+This is a known gap, not a deliberate design choice; wiring `PreviewApp` up
+to a real implementation (mirroring what `intellij-plugin` now does — see
+below) is a documented follow-up rather than in scope for any milestone so
+far.
+
+**Milestone 10:** `intellij-plugin` supplies the real,
+`DiagramSession`-backed implementation this seam anticipated —
+`dev.diagramcomposer.intellijplugin.DiagramSessionSourceSync`, a pure
+`DiagramSourceSync` wrapper with no IntelliJ platform imports (so it's
+unit-testable the same way `DiagramSessionTest` tests `DiagramSession`
+itself), decorated by `DocumentDiagramSourceSync` to also keep a real
+IntelliJ `Document` in sync via `WriteCommandAction`. See §3.5.
 
 ---
 
