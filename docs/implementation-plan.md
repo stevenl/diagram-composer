@@ -247,11 +247,14 @@ Goal: users can perform core edits visually, dispatching `core` commands.
 - All composables in this milestone use PascalCase (`AddEntityDialog`,
   `ElementExplorer`, `Toolbar`, ...), matching the Compose API guideline and
   the library's own composables. This needed exceptions in both linters:
-  `config/detekt/detekt.yml` overrides `FunctionNaming`, and `.editorconfig`
-  sets `ktlint_function_naming_ignore_when_annotated_with = Composable`
+  `config/detekt/detekt-compose.yml` overrides `FunctionNaming`, and
+  `.editorconfig` sets
+  `ktlint_function_naming_ignore_when_annotated_with = Composable`
   (docs/development.md §18) — both ignore `@Composable`-annotated
   functions, since each linter's default ruleset otherwise requires
-  lowerCamelCase.
+  lowerCamelCase. The same detekt file also relaxes `LongParameterList`/
+  `LongMethod` for `modules/ui` — see that section for why these are
+  scoped to `ui` rather than every module.
 
 ---
 

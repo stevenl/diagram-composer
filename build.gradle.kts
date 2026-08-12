@@ -42,16 +42,15 @@ allprojects {
         }
     }
 
-    // Custom rule set file: only overrides FunctionNaming, to allow
-    // PascalCase @Composable functions (Compose API guideline,
-    // https://developer.android.com/develop/ui/compose/api-guidelines#naming-unit)
-    // — consistent with the library's own composables (Text, Column, ...).
-    // buildUponDefaultConfig = true means every other default rule still
-    // applies as-is (docs/development.md §18).
+    // No custom rule set file at this level: every module gets detekt's
+    // unmodified default ruleset (buildUponDefaultConfig = true).
+    // config/detekt/detekt-compose.yml exists for Compose-specific
+    // relaxations, but is layered in only by the module(s) that actually
+    // apply the Compose plugin — see modules/ui/build.gradle.kts — since
+    // those rules have no effect anywhere else (docs/development.md §18).
     configure<DetektExtension> {
         buildUponDefaultConfig = true
         autoCorrect = false
-        config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
     }
 }
 

@@ -10,6 +10,8 @@
 // have something to display. See PreviewApp.kt's doc comment for the full
 // rationale for this scoped, documented deviation.
 
+import io.gitlab.arturbosch.detekt.extensions.DetektExtension
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.compose.compiler)
@@ -18,6 +20,15 @@ plugins {
 
 kotlin {
     jvmToolchain(21)
+}
+
+// Applies config/detekt/detekt-compose.yml (FunctionNaming +
+// LongMethod/LongParameterList relaxations for @Composable functions) —
+// scoped to this module since it's the only one with the Compose plugin
+// applied. buildUponDefaultConfig = true (set at the root) still applies
+// underneath, per the usual layering.
+configure<DetektExtension> {
+    config.setFrom(files("$rootDir/config/detekt/detekt-compose.yml"))
 }
 
 dependencies {

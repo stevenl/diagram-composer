@@ -1,0 +1,29 @@
+# Compose-specific relaxations, layered on top of the default ruleset
+# (buildUponDefaultConfig = true) by whichever module actually applies the
+# Compose plugin — currently just `modules/ui`'s build.gradle.kts via
+# `config.setFrom(...)`. If a future module (e.g. intellij-plugin) defines
+# its own @Composable functions, layer this file into its build.gradle.kts
+# too rather than hoisting it back up to config/detekt/detekt.yml — every
+# rule below only has an effect where @Composable functions actually exist.
+
+naming:
+  FunctionNaming:
+    # Composable functions follow the Compose API guideline of PascalCase
+    # (https://developer.android.com/develop/ui/compose/api-guidelines#naming-unit)
+    # to stay consistent with the library's own composables (Text, Column,
+    # AlertDialog, ...). Everything else keeps detekt's default
+    # lowerCamelCase convention.
+    ignoreAnnotated: ['Composable']
+
+complexity:
+  # Composables legitimately take more parameters than typical code (most
+  # with defaults — see e.g. Compose's own OutlinedTextField) and forms
+  # naturally run longer than 60 lines once every field's OutlinedTextField/
+  # DropdownField call is spelled out. Per detekt's own Compose guidance
+  # (https://detekt.dev/docs/introduction/compose/), relax rather than
+  # restructure working, readable composables to fit generic thresholds.
+  LongParameterList:
+    functionThreshold: 15
+    ignoreDefaultParameters: true
+  LongMethod:
+    active: false

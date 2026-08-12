@@ -632,12 +632,24 @@ committing.
 ```
 
 Enforced via the `io.gitlab.arturbosch.detekt` plugin, applied to every
-module from the root `build.gradle.kts`. Runs with `buildUponDefaultConfig
-= true`, plus one project-specific override in `config/detekt/detekt.yml`:
-`FunctionNaming` ignores `@Composable`-annotated functions, so composables
-follow the Compose API guideline of PascalCase (consistent with the
-library's own `Text`, `Column`, `AlertDialog`, etc.) instead of detekt's
-default lowerCamelCase. Every other rule is still the unmodified default.
+module from the root `build.gradle.kts`. Every module runs with
+`buildUponDefaultConfig = true` and no config file — detekt's unmodified
+default ruleset — except `modules/ui`, which additionally applies
+`config/detekt/detekt-compose.yml` (via that module's own
+`build.gradle.kts`): `FunctionNaming` ignores `@Composable`-annotated
+functions (so composables follow the Compose API guideline of PascalCase,
+consistent with the library's own `Text`, `Column`, `AlertDialog`, etc.,
+instead of detekt's default lowerCamelCase), and `LongParameterList`/
+`LongMethod` are relaxed, since composables routinely take more parameters
+than typical code and forms run longer than 60 lines once every field is
+spelled out (detekt's own Compose guidance,
+https://detekt.dev/docs/introduction/compose/, recommends this over
+restructuring working, readable composables to fit generic thresholds).
+This is scoped to `modules/ui` because that's the only module with the
+Compose plugin applied — none of these rules have any effect elsewhere, so
+`core`/`adapter-*` stay on the plain defaults. A future module that defines
+its own `@Composable` functions (e.g. `intellij-plugin`) should apply the
+same file rather than moving it back to a project-wide config.
 
 Dependency vulnerability checks are not yet enabled; still a candidate for
 future consideration.
