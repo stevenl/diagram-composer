@@ -1,6 +1,7 @@
 package dev.diagramcomposer.intellijplugin
 
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.ComposePanel
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorLocation
@@ -31,7 +32,8 @@ import javax.swing.JComponent
 class DiagramVisualFileEditor(
     private val file: VirtualFile,
     val viewModel: DiagramViewModel,
-) : UserDataHolderBase(), FileEditor {
+) : UserDataHolderBase(),
+    FileEditor {
     private val composePanel =
         ComposePanel().apply {
             setContent {
@@ -59,6 +61,7 @@ class DiagramVisualFileEditor(
 
     override fun getCurrentLocation(): FileEditorLocation? = null
 
+    @OptIn(ExperimentalComposeUiApi::class)
     override fun dispose() {
         composePanel.dispose()
     }

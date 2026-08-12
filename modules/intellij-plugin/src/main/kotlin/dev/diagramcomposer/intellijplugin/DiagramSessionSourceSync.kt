@@ -40,8 +40,15 @@ class DiagramSessionSourceSync(
 
     override fun applyExternalEdit(sourceText: String): SourceEditOutcome =
         when (val result = session.applyExternalEdit(sourceText)) {
-            is ApplyExternalEditResult.Applied -> SourceEditOutcome.Applied(result.diagram)
-            is ApplyExternalEditResult.Rejected -> SourceEditOutcome.Rejected(result.errors.map { it.toDisplayString() })
+            is ApplyExternalEditResult.Applied -> {
+                SourceEditOutcome.Applied(result.diagram)
+            }
+
+            is ApplyExternalEditResult.Rejected -> {
+                SourceEditOutcome.Rejected(
+                    result.errors.map { it.toDisplayString() }
+                )
+            }
         }
 }
 

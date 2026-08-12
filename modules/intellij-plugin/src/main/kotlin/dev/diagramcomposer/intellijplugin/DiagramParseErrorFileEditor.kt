@@ -28,7 +28,8 @@ import javax.swing.SwingConstants
 class DiagramParseErrorFileEditor(
     private val file: VirtualFile,
     errors: List<String>,
-) : UserDataHolderBase(), FileEditor {
+) : UserDataHolderBase(),
+    FileEditor {
     private val panel =
         JPanel(BorderLayout()).apply {
             val body = errors.joinToString("<br>") { "• ${it.escapeHtml()}" }

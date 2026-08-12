@@ -8,7 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorPolicy
 import com.intellij.openapi.fileEditor.FileEditorProvider
 import com.intellij.openapi.fileEditor.TextEditor
-import com.intellij.openapi.fileEditor.TextEditorProvider
+import com.intellij.openapi.fileEditor.impl.text.TextEditorProvider
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
@@ -68,7 +68,9 @@ import dev.diagramcomposer.ui.state.DiagramViewModel
  * refusing to open the file at all — the source side stays fully usable so
  * the user can fix the syntax error (see that class's doc comment).
  */
-class DiagramComposerEditorProvider : FileEditorProvider, DumbAware {
+class DiagramComposerEditorProvider :
+    FileEditorProvider,
+    DumbAware {
     private val adapter = PlantUmlC4Adapter()
 
     override fun accept(
@@ -116,7 +118,10 @@ class DiagramComposerEditorProvider : FileEditorProvider, DumbAware {
                 )
                 DiagramVisualFileEditor(file, viewModel)
             }
-            is OpenResult.Failure -> DiagramParseErrorFileEditor(file, openResult.errors.map { it.toDisplayString() })
+
+            is OpenResult.Failure -> {
+                DiagramParseErrorFileEditor(file, openResult.errors.map { it.toDisplayString() })
+            }
         }
 
     override fun getEditorTypeId(): String = EDITOR_TYPE_ID
